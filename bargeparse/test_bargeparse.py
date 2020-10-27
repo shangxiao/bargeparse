@@ -10,6 +10,7 @@ def test_args_and_kwargs(monkeypatch):
         "argparse._sys.argv", ["", "--c", "fizz", "--d", "buzz", "foo", "bar"]
     )
 
+    @command
     def func(a, b, c=None, d=None):
         nonlocal captured_a
         nonlocal captured_b
@@ -20,7 +21,7 @@ def test_args_and_kwargs(monkeypatch):
         captured_c = c
         captured_d = d
 
-    command(func)()
+    func()
 
     assert captured_a == "foo"
     assert captured_b == "bar"
@@ -32,11 +33,12 @@ def test_pos_only_args(monkeypatch):
     captured_a = None
     monkeypatch.setattr("argparse._sys.argv", ["", "foo"])
 
+    @command
     def func(a, /):
         nonlocal captured_a
         captured_a = a
 
-    command(func)()
+    func()
 
     assert captured_a == "foo"
 
@@ -45,11 +47,12 @@ def test_keyword_only_args(monkeypatch):
     captured_a = None
     monkeypatch.setattr("argparse._sys.argv", ["", "--a", "foo"])
 
+    @command
     def func(*, a):
         nonlocal captured_a
         captured_a = a
 
-    command(func)()
+    func()
 
     assert captured_a == "foo"
 
@@ -58,12 +61,13 @@ def test_docstring(monkeypatch, capsys):
     monkeypatch.setattr("argparse._sys.argv", ["", "--help"])
     monkeypatch.setattr("argparse._sys.exit", lambda _: _)
 
+    @command
     def func():
         """
         Helpful help message
         """
 
-    command(func)()
+    func()
 
     assert (
         capsys.readouterr().out
@@ -82,10 +86,11 @@ def test_typehint(monkeypatch):
     monkeypatch.setattr("argparse._sys.argv", ["", "1"])
     captured_a = None
 
+    @command
     def func(a: int):
         nonlocal captured_a
         captured_a = a
 
-    command(func)()
+    func()
 
     assert captured_a == 1
