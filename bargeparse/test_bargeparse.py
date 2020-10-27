@@ -1,3 +1,5 @@
+import pytest
+
 from bargeparse.command import command
 
 
@@ -82,15 +84,24 @@ optional arguments:
     )
 
 
-def test_typehint(monkeypatch):
-    monkeypatch.setattr("argparse._sys.argv", ["", "1"])
+@pytest.mark.parametrize(
+    "input_type,input,expected",
+    (
+        (str, "1", "1"),
+        (int, "1", 1),
+        (float, "0.25", 0.25),
+        (bool, "t", True),
+    ),
+)
+def test_typehint(monkeypatch, input_type, input, expected):
+    monkeypatch.setattr("argparse._sys.argv", ["", input])
     captured_a = None
 
     @command
-    def func(a: int):
+    def func(a: input_type):
         nonlocal captured_a
         captured_a = a
 
     func()
 
-    assert captured_a == 1
+    assert captured_a == expected
