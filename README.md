@@ -1,5 +1,7 @@
 # bargeparse
 
+![Tests](https://github.com/shangxiao/bargeparse/workflows/Tests/badge.svg)
+
 Introspect function signatures to construct a CLI
 
 ```python
