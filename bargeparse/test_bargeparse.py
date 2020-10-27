@@ -1,4 +1,4 @@
-from bargeparse.cli import cli
+from bargeparse.command import command
 
 
 def test_args_and_kwargs(monkeypatch):
@@ -20,7 +20,7 @@ def test_args_and_kwargs(monkeypatch):
         captured_c = c
         captured_d = d
 
-    cli(func)
+    command(func)()
 
     assert captured_a == "foo"
     assert captured_b == "bar"
@@ -36,7 +36,7 @@ def test_pos_only_args(monkeypatch):
         nonlocal captured_a
         captured_a = a
 
-    cli(func)
+    command(func)()
 
     assert captured_a == "foo"
 
@@ -49,7 +49,7 @@ def test_keyword_only_args(monkeypatch):
         nonlocal captured_a
         captured_a = a
 
-    cli(func)
+    command(func)()
 
     assert captured_a == "foo"
 
@@ -63,7 +63,7 @@ def test_docstring(monkeypatch, capsys):
         Helpful help message
         """
 
-    cli(func)
+    command(func)()
 
     assert (
         capsys.readouterr().out
@@ -86,6 +86,6 @@ def test_typehint(monkeypatch):
         nonlocal captured_a
         captured_a = a
 
-    cli(func)
+    command(func)()
 
     assert captured_a == 1
