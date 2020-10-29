@@ -4,6 +4,10 @@
 
 Introspect function signatures to construct a CLI
 
+```
+pip install bargeparse
+```
+
 ```python
 from bargeparse.command import command
 
