@@ -1,6 +1,8 @@
 import argparse
 import inspect
 
+from . import actions
+
 
 def is_positional(param):
     return (
@@ -23,7 +25,7 @@ def cli(func):
             parser.add_argument(
                 f"--{param.name}",
                 action=(
-                    argparse.BooleanOptionalAction
+                    actions.BooleanOptionalAction
                     if is_positional(param)
                     else f"store_{str(not param.default).lower()}"
                 ),
