@@ -1,3 +1,5 @@
+from datetime import date, datetime
+
 import pytest
 
 from bargeparse.command import command
@@ -92,6 +94,8 @@ optional arguments:
         (float, "0.25", 0.25),
         (bool, "--a", True),
         (bool, "--no-a", False),
+        (date, "2000-01-01", date(2000, 1, 1)),
+        (datetime, "2000-01-01 12:15:30", datetime(2000, 1, 1, 12, 15, 30)),
     ),
 )
 def test_typehint(monkeypatch, input_type, input, expected):

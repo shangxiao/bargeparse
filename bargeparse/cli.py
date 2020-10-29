@@ -1,7 +1,14 @@
 import argparse
+import datetime
 import inspect
 
+import dateutil.parser
+
 from . import actions
+
+
+def date_parser_type(date_str):
+    return dateutil.parser.parse(date_str).date()
 
 
 def is_positional(param):
@@ -12,13 +19,19 @@ def is_positional(param):
     )
 
 
+def get_param_type(param):
+    if param.annotation == datetime.date:
+        return date_parser_type
+    elif param.annotation == datetime.datetime:
+        return dateutil.parser.parse
+    return param.annotation if param.annotation != inspect.Parameter.empty else None
+
+
 def cli(func):
     parser = argparse.ArgumentParser(description=func.__doc__)
     params = inspect.signature(func).parameters.values()
     for param in params:
-        param_type = (
-            param.annotation if param.annotation != inspect.Parameter.empty else None
-        )
+        param_type = get_param_type(param)
 
         if param_type == bool:
             # booleans are a special case for both positional & keyword arguments
