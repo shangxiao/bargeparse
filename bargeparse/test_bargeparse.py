@@ -90,7 +90,8 @@ optional arguments:
         (str, "1", "1"),
         (int, "1", 1),
         (float, "0.25", 0.25),
-        (bool, "t", True),
+        (bool, "--a", True),
+        (bool, "--no-a", False),
     ),
 )
 def test_typehint(monkeypatch, input_type, input, expected):
@@ -99,6 +100,30 @@ def test_typehint(monkeypatch, input_type, input, expected):
 
     @command
     def func(a: input_type):
+        nonlocal captured_a
+        captured_a = a
+
+    func()
+
+    assert captured_a == expected
+
+
+@pytest.mark.parametrize(
+    "param_default,input,expected",
+    (
+        (False, "--a", True),
+        (False, None, False),
+        (True, "--a", False),
+        (True, None, True),
+    ),
+)
+def test_typehint_optional_boolean(monkeypatch, param_default, input, expected):
+    if input:
+        monkeypatch.setattr("argparse._sys.argv", ["", input])
+    captured_a = None
+
+    @command
+    def func(a: bool = param_default):
         nonlocal captured_a
         captured_a = a
 

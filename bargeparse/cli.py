@@ -18,15 +18,29 @@ def cli(func):
             param.annotation if param.annotation != inspect.Parameter.empty else None
         )
 
-        if is_positional(param):
-            parser.add_argument(param.name, type=param_type)
-        else:
+        if param_type == bool:
+            # booleans are a special case for both positional & keyword arguments
             parser.add_argument(
                 f"--{param.name}",
-                default=param.default,
-                required=param.kind == inspect.Parameter.KEYWORD_ONLY,
-                type=param_type,
+                action=(
+                    argparse.BooleanOptionalAction
+                    if is_positional(param)
+                    else f"store_{str(not param.default).lower()}"
+                ),
             )
+        else:
+            if is_positional(param):
+                parser.add_argument(
+                    param.name,
+                    type=param_type,
+                )
+            else:
+                parser.add_argument(
+                    f"--{param.name}",
+                    default=param.default,
+                    required=param.kind == inspect.Parameter.KEYWORD_ONLY,
+                    type=param_type,
+                )
 
     arg_namespace = parser.parse_args()
     args = []
