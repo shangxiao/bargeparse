@@ -19,7 +19,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 black pytest
+        pip install flake8 black isort pytest
         pip install .
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Lint with flake8
@@ -31,6 +31,9 @@ jobs:
     - name: Check style aligned with Black
       run: |
         black --check .
+    - name: Check imports are sorted
+      run: |
+        isort --check .
     - name: Test with pytest
       run: |
         pytest
