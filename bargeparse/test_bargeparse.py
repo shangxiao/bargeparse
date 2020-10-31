@@ -52,21 +52,29 @@ def test_pos_only_args(monkeypatch):
 
     assert captured_a == "foo"
     assert captured_b == "bar"
-    assert captured_c == 'c'
+    assert captured_c == "c"
 
 
 def test_keyword_only_args(monkeypatch):
     captured_a = None
-    monkeypatch.setattr("argparse._sys.argv", ["", "--a", "foo"])
+    captured_b = None
+    captured_c = None
+    monkeypatch.setattr("argparse._sys.argv", ["", "--a", "foo", "--b", "bar"])
 
     @command
-    def func(*, a):
+    def func(*, a, b="b", c="c"):
         nonlocal captured_a
+        nonlocal captured_b
+        nonlocal captured_c
         captured_a = a
+        captured_b = b
+        captured_c = c
 
     func()
 
     assert captured_a == "foo"
+    assert captured_b == "bar"
+    assert captured_c == "c"
 
 
 def test_docstring(monkeypatch, capsys):

@@ -59,8 +59,8 @@ def cli(func):
             else:
                 parser.add_argument(
                     f"--{param.name}",
-                    default=param.default,
-                    required=param.kind == inspect.Parameter.KEYWORD_ONLY,
+                    default=param.default if has_default else None,
+                    required=not has_default,
                     type=param_type,
                 )
 
