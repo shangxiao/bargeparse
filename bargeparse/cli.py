@@ -35,6 +35,7 @@ def cli(func):
     params = inspect.signature(func).parameters.values()
     for param in params:
         param_type = get_param_type(param)
+        has_default = param.default != inspect.Parameter.empty
 
         if param_type == bool:
             # booleans are a special case for both positional & keyword arguments
@@ -51,6 +52,9 @@ def cli(func):
                 parser.add_argument(
                     param.name,
                     type=param_type,
+                    # nargs="?" can make a posarg "optional"
+                    nargs="?" if has_default else None,
+                    default=param.default if has_default else None,
                 )
             else:
                 parser.add_argument(
