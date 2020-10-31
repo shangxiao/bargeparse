@@ -23,11 +23,14 @@ def is_positional(param):
 
 
 def get_param_type(param):
-    if param.annotation == datetime.date:
+    if param.annotation == inspect.Parameter.empty:
+        return None
+    elif param.annotation == datetime.date:
         return date_parser
     elif param.annotation == datetime.datetime:
         return datetime_parser
-    return param.annotation if param.annotation != inspect.Parameter.empty else None
+    else:
+        return param.annotation
 
 
 def cli(func):
