@@ -52,10 +52,10 @@ def cli(func):
             if is_positional(param):
                 parser.add_argument(
                     param.name,
-                    type=param_type,
+                    default=param.default if has_default else None,
                     # nargs="?" can make a posarg "optional"
                     nargs="?" if has_default else None,
-                    default=param.default if has_default else None,
+                    type=param_type,
                 )
             else:
                 parser.add_argument(
