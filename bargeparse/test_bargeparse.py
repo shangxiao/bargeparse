@@ -77,6 +77,24 @@ def test_keyword_only_args(monkeypatch):
     assert captured_c == "c"
 
 
+def test_converts_arg_names_to_kebab_case(monkeypatch):
+    captured_positional_argument = None
+    captured_optional_argument = None
+    monkeypatch.setattr("argparse._sys.argv", ["", "foo", "--optional-argument", "bar"])
+
+    @command
+    def func(positional_argument, optional_argument="buzz"):
+        nonlocal captured_positional_argument
+        nonlocal captured_optional_argument
+        captured_positional_argument = positional_argument
+        captured_optional_argument = optional_argument
+
+    func()
+
+    assert captured_positional_argument == "foo"
+    assert captured_optional_argument == "bar"
+
+
 def test_docstring(monkeypatch, capsys):
     monkeypatch.setattr("argparse._sys.argv", ["", "--help"])
     monkeypatch.setattr("argparse._sys.exit", lambda _: _)

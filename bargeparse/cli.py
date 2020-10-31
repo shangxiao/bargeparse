@@ -37,13 +37,14 @@ def cli(func):
     parser = argparse.ArgumentParser(description=func.__doc__)
     params = inspect.signature(func).parameters.values()
     for param in params:
+        param_name = param.name.replace("_", "-")
         param_type = get_param_type(param)
         has_default = param.default != inspect.Parameter.empty
 
         if param_type == bool:
             # booleans are a special case for both positional & keyword arguments
             parser.add_argument(
-                f"--{param.name}",
+                f"--{param_name}",
                 action=(
                     actions.BooleanOptionalAction
                     if not has_default
@@ -54,7 +55,7 @@ def cli(func):
         else:
             if is_positional(param):
                 parser.add_argument(
-                    param.name,
+                    param_name,
                     default=param.default if has_default else None,
                     # nargs="?" can make a posarg "optional"
                     nargs="?" if has_default else None,
@@ -62,7 +63,7 @@ def cli(func):
                 )
             else:
                 parser.add_argument(
-                    f"--{param.name}",
+                    f"--{param_name}",
                     default=param.default if has_default else None,
                     required=not has_default,
                     type=param_type,
@@ -72,8 +73,16 @@ def cli(func):
     args = []
     kwargs = {}
     for param in params:
+        # For some reason optional arguments get converted back to underscores in the Namespace object,
+        # so just use the original param.name to reference the value.
+        param_value = getattr(
+            arg_namespace,
+            param.name.replace("_", "-")
+            if is_positional(param) and param.annotation != bool
+            else param.name,
+        )
         if is_positional(param):
-            args.append(getattr(arg_namespace, param.name))
+            args.append(param_value)
         else:
-            kwargs[param.name] = getattr(arg_namespace, param.name)
+            kwargs[param.name] = param_value
     func(*args, **kwargs)
