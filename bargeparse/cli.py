@@ -1,14 +1,17 @@
 import argparse
 import datetime
 import inspect
-
-import dateutil.parser
+import re
 
 from . import actions
 
 
-def date_parser_type(date_str):
-    return dateutil.parser.parse(date_str).date()
+def date_parser(date_str):
+    return datetime.datetime.strptime(re.sub(r"\D", " ", date_str), "%Y %m %d").date()
+
+
+def datetime_parser(date_str):
+    return datetime.datetime.strptime(re.sub(r"\D", " ", date_str), "%Y %m %d %H %M %S")
 
 
 def is_positional(param):
@@ -21,9 +24,9 @@ def is_positional(param):
 
 def get_param_type(param):
     if param.annotation == datetime.date:
-        return date_parser_type
+        return date_parser
     elif param.annotation == datetime.datetime:
-        return dateutil.parser.parse
+        return datetime_parser
     return param.annotation if param.annotation != inspect.Parameter.empty else None
 
 
