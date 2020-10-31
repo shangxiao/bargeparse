@@ -22,7 +22,7 @@ def is_positional(param):
     )
 
 
-def get_param_type(param):
+def get_param_factory(param):
     if param.annotation == inspect.Parameter.empty:
         return None
     elif param.annotation == datetime.date:
@@ -38,11 +38,20 @@ def cli(func):
     params = inspect.signature(func).parameters.values()
     for param in params:
         param_name = param.name.replace("_", "-")
-        param_type = get_param_type(param)
         has_default = param.default != inspect.Parameter.empty
+        help_parts = {
+            "required": (
+                not has_default
+                and (not is_positional(param) or param.annotation == bool)
+            ),
+            f"default: {param.default}": (
+                has_default and param.default is not None and param.annotation != bool
+            ),
+        }
+        help_msg = ", ".join(part for part, pred in help_parts.items() if pred)
 
-        if param_type == bool:
-            # booleans are a special case for both positional & keyword arguments
+        if param.annotation == bool:
+            # booleans are always optional for both args & kwargs
             parser.add_argument(
                 f"--{param_name}",
                 action=(
@@ -51,22 +60,26 @@ def cli(func):
                     else f"store_{str(not param.default).lower()}"
                 ),
                 required=not has_default,
+                help=help_msg,
             )
         else:
+            param_factory = get_param_factory(param)
             if is_positional(param):
                 parser.add_argument(
                     param_name,
                     default=param.default if has_default else None,
                     # nargs="?" can make a posarg "optional"
                     nargs="?" if has_default else None,
-                    type=param_type,
+                    type=param_factory,
+                    help=help_msg,
                 )
             else:
                 parser.add_argument(
                     f"--{param_name}",
                     default=param.default if has_default else None,
                     required=not has_default,
-                    type=param_type,
+                    type=param_factory,
+                    help=help_msg,
                 )
 
     arg_namespace = parser.parse_args()

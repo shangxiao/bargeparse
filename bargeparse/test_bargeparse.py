@@ -1,3 +1,4 @@
+import os
 from datetime import date, datetime
 
 import pytest
@@ -95,12 +96,28 @@ def test_converts_arg_names_to_kebab_case(monkeypatch):
     assert captured_optional_argument == "bar"
 
 
-def test_docstring(monkeypatch, capsys):
+def test_help_renders_docstring_and_correct_help_messages(monkeypatch, capsys):
     monkeypatch.setattr("argparse._sys.argv", ["", "--help"])
     monkeypatch.setattr("argparse._sys.exit", lambda _: _)
+    monkeypatch.setattr(
+        "shutil.get_terminal_size", lambda: os.terminal_size((1000, 1000))
+    )
 
     @command
-    def func():
+    def func(
+        arg_1,
+        arg_2: bool,
+        arg_3: bool = False,
+        arg_4=None,
+        arg_5="arg_5",
+        /,
+        *,
+        kwarg_1,
+        kwarg_2: bool,
+        kwarg_3="kwarg_3",
+        kwarg_4=None,
+        kwarg_5: bool = False,
+    ):
         """
         Helpful help message
         """
@@ -110,12 +127,25 @@ def test_docstring(monkeypatch, capsys):
     assert (
         capsys.readouterr().out
         == """\
-usage: [-h]
+usage: [-h] --arg-2 [--arg-3] --kwarg-1 KWARG_1 --kwarg-2 [--kwarg-3 KWARG_3] [--kwarg-4 KWARG_4] [--kwarg-5] arg-1 [arg-4] [arg-5]
 
 Helpful help message
 
+positional arguments:
+  arg-1
+  arg-4
+  arg-5                 default: arg_5
+
 optional arguments:
-  -h, --help  show this help message and exit
+  -h, --help            show this help message and exit
+  --arg-2, --no-arg-2   required
+  --arg-3
+  --kwarg-1 KWARG_1     required
+  --kwarg-2, --no-kwarg-2
+                        required
+  --kwarg-3 KWARG_3     default: kwarg_3
+  --kwarg-4 KWARG_4
+  --kwarg-5
 """
     )
 
