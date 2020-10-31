@@ -156,8 +156,10 @@ def test_typehint(monkeypatch, input_type, input, expected):
     ),
 )
 def test_typehint_optional_boolean(monkeypatch, param_default, input, expected):
+    params = [""]
     if input:
-        monkeypatch.setattr("argparse._sys.argv", ["", input])
+        params += [input]
+    monkeypatch.setattr("argparse._sys.argv", params)
     captured_a = None
 
     @command
