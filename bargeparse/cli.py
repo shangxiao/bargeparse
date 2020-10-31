@@ -43,9 +43,10 @@ def cli(func):
                 f"--{param.name}",
                 action=(
                     actions.BooleanOptionalAction
-                    if is_positional(param)
+                    if not has_default
                     else f"store_{str(not param.default).lower()}"
                 ),
+                required=not has_default,
             )
         else:
             if is_positional(param):
