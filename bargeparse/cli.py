@@ -17,8 +17,8 @@ def datetime_parser(date_str):
 def is_positional(param):
     return (
         param.kind == inspect.Parameter.POSITIONAL_ONLY
-        or param.default == inspect.Parameter.empty
-        and param.kind != inspect.Parameter.KEYWORD_ONLY
+        or param.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
+        and param.default == inspect.Parameter.empty
     )
 
 
