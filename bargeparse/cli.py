@@ -37,7 +37,7 @@ def cli(func):
     parser = argparse.ArgumentParser(description=func.__doc__)
     params = inspect.signature(func).parameters.values()
     for param in params:
-        param_name = param.name.strip("_").replace("_", "-")
+        param_display_name = param.name.strip("_").replace("_", "-")
         has_default = param.default != inspect.Parameter.empty
         help_parts = {
             "required": (
@@ -53,7 +53,7 @@ def cli(func):
         if param.annotation == bool:
             # booleans are always optional for both args & kwargs
             parser.add_argument(
-                f"--{param_name}",
+                f"--{param_display_name}",
                 dest=param.name,
                 action=(
                     actions.BooleanOptionalAction
@@ -68,7 +68,7 @@ def cli(func):
             if is_positional(param):
                 parser.add_argument(
                     param.name,
-                    metavar=param_name,
+                    metavar=param_display_name,
                     default=param.default if has_default else None,
                     # nargs="?" can make a posarg "optional"
                     nargs="?" if has_default else None,
@@ -77,7 +77,7 @@ def cli(func):
                 )
             else:
                 parser.add_argument(
-                    f"--{param_name}",
+                    f"--{param_display_name}",
                     dest=param.name,
                     default=param.default if has_default else None,
                     required=not has_default,
