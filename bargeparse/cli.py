@@ -54,6 +54,7 @@ def cli(func):
             # booleans are always optional for both args & kwargs
             parser.add_argument(
                 f"--{param_name}",
+                dest=param.name,
                 action=(
                     actions.BooleanOptionalAction
                     if not has_default
@@ -66,7 +67,8 @@ def cli(func):
             param_factory = get_param_factory(param)
             if is_positional(param):
                 parser.add_argument(
-                    param_name,
+                    param.name,
+                    metavar=param_name,
                     default=param.default if has_default else None,
                     # nargs="?" can make a posarg "optional"
                     nargs="?" if has_default else None,
@@ -76,6 +78,7 @@ def cli(func):
             else:
                 parser.add_argument(
                     f"--{param_name}",
+                    dest=param.name,
                     default=param.default if has_default else None,
                     required=not has_default,
                     type=param_factory,
@@ -86,16 +89,8 @@ def cli(func):
     args = []
     kwargs = {}
     for param in params:
-        # For some reason optional arguments get converted back to underscores in the Namespace object,
-        # so just use the original param.name to reference the value.
-        param_value = getattr(
-            arg_namespace,
-            param.name.replace("_", "-")
-            if is_positional(param) and param.annotation != bool
-            else param.name,
-        )
         if is_positional(param):
-            args.append(param_value)
+            args.append(getattr(arg_namespace, param.name))
         else:
-            kwargs[param.name] = param_value
+            kwargs[param.name] = getattr(arg_namespace, param.name)
     func(*args, **kwargs)
