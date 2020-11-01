@@ -3,7 +3,7 @@ from datetime import date, datetime
 
 import pytest
 
-from bargeparse.command import command
+from bargeparse import command
 
 
 def test_args_and_kwargs(monkeypatch):
