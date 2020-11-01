@@ -37,7 +37,7 @@ def cli(func):
     parser = argparse.ArgumentParser(description=func.__doc__)
     params = inspect.signature(func).parameters.values()
     for param in params:
-        param_name = param.name.replace("_", "-")
+        param_name = param.name.strip("_").replace("_", "-")
         has_default = param.default != inspect.Parameter.empty
         help_parts = {
             "required": (

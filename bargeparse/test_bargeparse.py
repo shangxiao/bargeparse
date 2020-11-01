@@ -81,19 +81,37 @@ def test_keyword_only_args(monkeypatch):
 def test_converts_arg_names_to_kebab_case(monkeypatch):
     captured_positional_argument = None
     captured_optional_argument = None
-    monkeypatch.setattr("argparse._sys.argv", ["", "foo", "--optional-argument", "bar"])
+    captured_arg_surrounded_by_underscores = None
+    monkeypatch.setattr(
+        "argparse._sys.argv",
+        [
+            "",
+            "foo",
+            "--optional-argument",
+            "bar",
+            "--arg-surrounded-by-underscores",
+            "buzz",
+        ],
+    )
 
     @command
-    def func(positional_argument, optional_argument="buzz"):
+    def func(
+        positional_argument,
+        optional_argument="buzz",
+        __arg_surrounded_by_underscores___=None,
+    ):
         nonlocal captured_positional_argument
         nonlocal captured_optional_argument
+        nonlocal captured_arg_surrounded_by_underscores
         captured_positional_argument = positional_argument
         captured_optional_argument = optional_argument
+        captured_arg_surrounded_by_underscores = __arg_surrounded_by_underscores___
 
     func()
 
     assert captured_positional_argument == "foo"
     assert captured_optional_argument == "bar"
+    assert captured_arg_surrounded_by_underscores == "buzz"
 
 
 def test_help_renders_docstring_and_correct_help_messages(monkeypatch, capsys):
