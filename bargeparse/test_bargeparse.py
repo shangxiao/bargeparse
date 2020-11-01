@@ -1,4 +1,5 @@
 import os
+from dataclasses import dataclass
 from datetime import date, datetime
 
 import pytest
@@ -218,3 +219,21 @@ def test_typehint_optional_boolean(monkeypatch, param_default, input, expected):
     func()
 
     assert captured_a == expected
+
+
+def test_custom_type_factory(monkeypatch):
+    captured_a = None
+    monkeypatch.setattr("argparse._sys.argv", ["", "foo"])
+
+    @dataclass
+    class CustomType:
+        a: str
+
+    @command
+    def func(a: CustomType):
+        nonlocal captured_a
+        captured_a = a
+
+    func()
+
+    assert captured_a == CustomType("foo")
