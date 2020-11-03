@@ -2,8 +2,14 @@ import argparse
 import datetime
 import inspect
 import re
+import typing
 
 from . import actions
+
+LIST_TYPES = (
+    typing.List,
+    list,  # as of Python 3.9
+)
 
 
 def date_parser(date_str):
@@ -84,6 +90,18 @@ def cli(func):
                     required=not has_default,
                     type=param_factory,
                     help=help_msg,
+                )
+
+            # support for list or list[T] types
+            if getattr(param.annotation, "__origin__", param.annotation) in LIST_TYPES:
+                arg_options["nargs"] = "*"
+                # be sure to replace the list type with something meaningful if specified, otherwise nothing
+                arg_options["type"] = (
+                    param.annotation.__args__[0]
+                    if hasattr(param.annotation, "__args__")
+                    # typing.List seems to have a T type var even if not specified on 3.8.5 ?
+                    and type(param.annotation.__args__[0]) != typing.TypeVar
+                    else None
                 )
 
         parser.add_argument(arg_name, **arg_options)

@@ -1,5 +1,7 @@
 import os
 import pathlib
+import sys
+import typing
 from dataclasses import dataclass
 from datetime import date, datetime
 
@@ -244,3 +246,57 @@ def test_custom_type_factory(monkeypatch):
     func()
 
     assert captured_a == CustomType("foo")
+
+
+@pytest.mark.parametrize(
+    "list_type,input_value,expected",
+    (
+        pytest.param(
+            list,
+            ["a", "b"],
+            ["a", "b"],
+            marks=pytest.mark.skipif(
+                sys.version_info < (3, 9), reason="Builtin type unsupported"
+            ),
+        ),
+        pytest.param(
+            "list[int]",
+            ["1", "2"],
+            [1, 2],
+            marks=pytest.mark.skipif(
+                sys.version_info < (3, 9), reason="Builtin type unsupported"
+            ),
+        ),
+        (
+            typing.List,
+            ["a", "b"],
+            ["a", "b"],
+        ),
+        (
+            typing.List[int],
+            ["1", "2"],
+            [1, 2],
+        ),
+    ),
+)
+def test_list_types(monkeypatch, list_type, input_value, expected):
+    captured_a = None
+    captured_b = None
+    args = [""] + input_value + ["--b"] + input_value
+    monkeypatch.setattr("argparse._sys.argv", args)
+
+    # not sure how else to do this to test on < 3.9
+    if type(list_type) == str:
+        list_type = eval(list_type)
+
+    @command
+    def func(a: list_type, b: list_type = None):
+        nonlocal captured_a
+        nonlocal captured_b
+        captured_a = a
+        captured_b = b
+
+    func()
+
+    assert captured_a == expected
+    assert captured_a == expected

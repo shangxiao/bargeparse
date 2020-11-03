@@ -31,7 +31,7 @@ python awesome_cli.py foo --bar bar
 
 Bargeparse introspects your function signature using argparse to create a CLI with the following features:
 
-* Type casting using typehints in the signature with special support for booleans.
+* Type casting using typehints in the signature with special support for booleans and lists.
 * Automatically create CLI "positional" or "optional" arguments from function parameters based on whether they have a
   default value; or whether they are positional-only or keyword-only.
 * Help & usage messages as defined by argparse, using the function's docstring as the description.
@@ -73,6 +73,7 @@ The following types are supported out of the box:
   * `bool` (will always render as optional CLI arguments)
   * `date` (following the `%Y %m %d` format - delimited with any char)
   * `datetime` (following the `%Y %m %d %H %M %S` format - delimited with any char)
+  * `list`, `list[T]`, `typing.List` and `typing.List[T]` where `T` is another supported type other than lists
   * any type that can be invoked like a type factory as described in the [argparse
     docs](https://docs.python.org/3.9/library/argparse.html#type)
 
@@ -87,6 +88,17 @@ class CustomType:
 def cli(foo: CustomType):
     ...
 ```
+
+### A note about lists
+
+Single dimension lists are supported via the [`nargs="*"`
+option](https://docs.python.org/3/library/argparse.html#nargs). As noted in the documentation: 
+
+> Note that it generally doesn’t make much sense to have more than one positional argument with `nargs='*'`, but multiple
+> optional arguments with `nargs='*'` is possible.
+
+Multi-optional arguments must be specified after positional arguments so that the CLI parser understands the boundaries
+between the arguments.
 
 
 ## Usage
@@ -242,6 +254,34 @@ False
 $ python sample_api.py --no-foo --bar
 False
 True
+```
+
+
+### List support
+
+Lists can be specified with any of the following:
+
+ * `typing.List`
+ * `typing.List[T]`
+ * `list`
+ * `list[T]` 
+
+Where `T` is another supported type other than a list.  Note that `list` is a supported typehint from Python 3.9 onwards.
+
+When an optional argument is a list it should be specified after any positional arguments so as not to confuse the
+parser.
+
+```python
+@bargeparse.command
+def sample_api(foo: list, bar: list[int] = None):
+    pprint(foo)
+    pprint(bar)
+```
+
+```
+$ python sample_api.py 1 2 --bar 1 2 
+['1', '2']
+[1, 2]
 ```
 
 
