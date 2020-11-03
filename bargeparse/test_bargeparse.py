@@ -1,4 +1,5 @@
 import os
+import pathlib
 from dataclasses import dataclass
 from datetime import date, datetime
 
@@ -179,6 +180,7 @@ optional arguments:
         (bool, "--no-a", False),
         (date, "2000-01-01", date(2000, 1, 1)),
         (datetime, "2000-01-01 12:15:30", datetime(2000, 1, 1, 12, 15, 30)),
+        (pathlib.Path, ".", pathlib.Path(".")),
     ),
 )
 def test_typehint(monkeypatch, input_type, input, expected):
