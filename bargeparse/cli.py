@@ -51,9 +51,9 @@ def cli(func):
         help_msg = ", ".join(part for part, pred in help_parts.items() if pred)
 
         if param.annotation == bool:
-            # booleans are always optional for both args & kwargs
-            parser.add_argument(
-                f"--{param_display_name}",
+            # booleans are always optional for both types of parameters
+            arg_name = f"--{param_display_name}"
+            arg_options = dict(
                 dest=param.name,
                 action=(
                     actions.BooleanOptionalAction
@@ -65,9 +65,10 @@ def cli(func):
             )
         else:
             param_factory = get_param_factory(param)
+
             if is_positional(param):
-                parser.add_argument(
-                    param.name,
+                arg_name = param.name
+                arg_options = dict(
                     metavar=param_display_name,
                     default=argparse.SUPPRESS,
                     # nargs="?" can make a posarg "optional"
@@ -76,14 +77,16 @@ def cli(func):
                     help=help_msg,
                 )
             else:
-                parser.add_argument(
-                    f"--{param_display_name}",
+                arg_name = f"--{param_display_name}"
+                arg_options = dict(
                     dest=param.name,
                     default=argparse.SUPPRESS,
                     required=not has_default,
                     type=param_factory,
                     help=help_msg,
                 )
+
+        parser.add_argument(arg_name, **arg_options)
 
     arg_namespace = parser.parse_args()
     args = []
