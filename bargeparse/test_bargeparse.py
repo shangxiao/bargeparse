@@ -117,8 +117,12 @@ def test_converts_arg_names_to_kebab_case(monkeypatch):
 
 
 def test_help_renders_docstring_and_correct_help_messages(monkeypatch, capsys):
+    def raise_an_exception(_):
+        raise Exception()
+
     monkeypatch.setattr("argparse._sys.argv", ["", "--help"])
-    monkeypatch.setattr("argparse._sys.exit", lambda _: _)
+    # raise an exception instead of exiting (or attempting to call func() with missing args)
+    monkeypatch.setattr("argparse._sys.exit", raise_an_exception)
     monkeypatch.setattr(
         "shutil.get_terminal_size", lambda: os.terminal_size((1000, 1000))
     )
@@ -142,7 +146,8 @@ def test_help_renders_docstring_and_correct_help_messages(monkeypatch, capsys):
         Helpful help message
         """
 
-    func()
+    with pytest.raises(Exception):
+        func()
 
     assert (
         capsys.readouterr().out

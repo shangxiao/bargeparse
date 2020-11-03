@@ -69,7 +69,7 @@ def cli(func):
                 parser.add_argument(
                     param.name,
                     metavar=param_display_name,
-                    default=param.default if has_default else None,
+                    default=argparse.SUPPRESS,
                     # nargs="?" can make a posarg "optional"
                     nargs="?" if has_default else None,
                     type=param_factory,
@@ -79,7 +79,7 @@ def cli(func):
                 parser.add_argument(
                     f"--{param_display_name}",
                     dest=param.name,
-                    default=param.default if has_default else None,
+                    default=argparse.SUPPRESS,
                     required=not has_default,
                     type=param_factory,
                     help=help_msg,
@@ -89,6 +89,9 @@ def cli(func):
     args = []
     kwargs = {}
     for param in params:
+        if param.name not in arg_namespace:
+            # skip suppressed optional args with defaults that were not supplied
+            continue
         if is_positional(param):
             args.append(getattr(arg_namespace, param.name))
         else:
