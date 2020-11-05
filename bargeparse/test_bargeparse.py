@@ -218,3 +218,25 @@ def test_list_types(monkeypatch, list_type, input_value, expected):
 
     assert captured_a == expected
     assert captured_a == expected
+
+
+def test_register_other_types(monkeypatch):
+    captured_foo = None
+    monkeypatch.setattr("argparse._sys.argv", ["", "a-b"])
+
+    @dataclass
+    class CustomType:
+        a: str
+        b: str
+
+    def custom_type_factory(input_str: str) -> CustomType:
+        return CustomType(*input_str.split("-"))
+
+    @command(param_factories={CustomType: custom_type_factory})
+    def func(foo: CustomType):
+        nonlocal captured_foo
+        captured_foo = foo
+
+    func()
+
+    assert captured_foo == CustomType("a", "b")

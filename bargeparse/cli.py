@@ -28,18 +28,20 @@ def is_positional(param):
     )
 
 
-def get_param_factory(param):
+def get_param_factory(param, param_factories=None):
     if param.annotation == inspect.Parameter.empty:
         return None
     elif param.annotation == datetime.date:
         return date_parser
     elif param.annotation == datetime.datetime:
         return datetime_parser
+    elif param_factories is not None and param.annotation in param_factories:
+        return param_factories[param.annotation]
     else:
         return param.annotation
 
 
-def cli(func):
+def cli(func, param_factories=None):
     parser = argparse.ArgumentParser(description=func.__doc__)
     params = inspect.signature(func).parameters.values()
     for param in params:
@@ -70,7 +72,7 @@ def cli(func):
                 help=help_msg,
             )
         else:
-            param_factory = get_param_factory(param)
+            param_factory = get_param_factory(param, param_factories)
 
             if is_positional(param):
                 arg_name = param.name
