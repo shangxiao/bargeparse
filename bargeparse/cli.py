@@ -93,12 +93,18 @@ def cli(func):
                 )
 
             # support for list or list[T] types
-            if getattr(param.annotation, "__origin__", param.annotation) in LIST_TYPES:
+            if (
+                getattr(param.annotation, "__origin__", param.annotation)
+                # Note: in Python 3.6 typing.List.__origin__ would return None
+                or param.annotation
+            ) in LIST_TYPES:
                 arg_options["nargs"] = "*"
                 # be sure to replace the list type with something meaningful if specified, otherwise nothing
                 arg_options["type"] = (
                     param.annotation.__args__[0]
                     if hasattr(param.annotation, "__args__")
+                    # __args__ is None in Python 3.6
+                    and param.annotation.__args__
                     # typing.List seems to have a T type var even if not specified on 3.8.5 ?
                     and type(param.annotation.__args__[0]) != typing.TypeVar
                     else None
