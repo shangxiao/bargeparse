@@ -2,6 +2,7 @@ import argparse
 import datetime
 import inspect
 import re
+import textwrap
 import typing
 
 from . import actions
@@ -42,7 +43,11 @@ def get_param_factory(param, param_factories=None):
 
 
 def cli(func, param_factories=None):
-    parser = argparse.ArgumentParser(description=func.__doc__)
+    description = textwrap.dedent(func.__doc__) if func.__doc__ else None
+    parser = argparse.ArgumentParser(
+        description=description,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     params = inspect.signature(func).parameters.values()
     for param in params:
         param_display_name = param.name.strip("_").replace("_", "-")
