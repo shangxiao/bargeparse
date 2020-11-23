@@ -43,13 +43,7 @@ def get_param_factory(param, param_factories=None):
         return param.annotation
 
 
-def cli(func, param_factories=None):
-    description = textwrap.dedent(func.__doc__) if func.__doc__ else None
-    parser = argparse.ArgumentParser(
-        description=description,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-    )
-    params = inspect.signature(func).parameters.values()
+def define_params(params, parser, param_factories):
     for param in params:
         param_display_name = param.name.strip("_").replace("_", "-")
         has_default = param.default != inspect.Parameter.empty
@@ -133,6 +127,16 @@ def cli(func, param_factories=None):
                 )
 
         parser.add_argument(arg_name, **arg_options)
+
+
+def cli(func, param_factories=None):
+    description = textwrap.dedent(func.__doc__) if func.__doc__ else None
+    parser = argparse.ArgumentParser(
+        description=description,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    params = inspect.signature(func).parameters.values()
+    define_params(params, parser, param_factories)
 
     arg_namespace = parser.parse_args()
     args = []
