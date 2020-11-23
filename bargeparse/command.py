@@ -7,6 +7,8 @@ def command(*args, param_factories=None):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
+            # If there are args or kwargs, then assume that func() is being called
+            # directly and is not from the command line.
             if len(args) > 0 or len(kwargs) > 0:
                 return func(*args, **kwargs)
             cli(func, param_factories=param_factories)
