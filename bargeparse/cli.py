@@ -14,20 +14,20 @@ LIST_TYPES = (
 )
 
 
-def date_parser(date_str):
-    return datetime.datetime.strptime(re.sub(r"\D", " ", date_str), "%Y %m %d").date()
-
-
-def datetime_parser(date_str):
-    return datetime.datetime.strptime(re.sub(r"\D", " ", date_str), "%Y %m %d %H %M %S")
-
-
 def is_positional(param):
     return (
         param.kind == inspect.Parameter.POSITIONAL_ONLY
         or param.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
         and param.default == inspect.Parameter.empty
     )
+
+
+def date_parser(date_str):
+    return datetime.datetime.strptime(re.sub(r"\D", " ", date_str), "%Y %m %d").date()
+
+
+def datetime_parser(date_str):
+    return datetime.datetime.strptime(re.sub(r"\D", " ", date_str), "%Y %m %d %H %M %S")
 
 
 def get_param_factory(param, param_factories=None):
