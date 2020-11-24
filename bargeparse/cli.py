@@ -49,6 +49,12 @@ def get_param_factory(param, param_factories=None):
 
 def define_params(params, parser, param_factories):
     for param in params:
+        if param.kind in (
+            inspect.Parameter.VAR_POSITIONAL,
+            inspect.Parameter.VAR_KEYWORD,
+        ):
+            continue
+
         param_display_name = kebab_case(param.name)
         has_default = param.default != inspect.Parameter.empty
         help_parts = {
