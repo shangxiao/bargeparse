@@ -11,6 +11,20 @@ import pytest
 from bargeparse import command
 
 
+def test_command_no_params(monkeypatch):
+    func_run = False
+    monkeypatch.setattr("argparse._sys.argv", [""])
+
+    @command
+    def func():
+        nonlocal func_run
+        func_run = True
+
+    func()
+
+    assert func_run
+
+
 def test_args_and_kwargs(monkeypatch):
     captured_a = None
     captured_b = None
