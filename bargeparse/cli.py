@@ -14,6 +14,10 @@ LIST_TYPES = (
 )
 
 
+def kebab_case(string):
+    return string.strip("_").replace("_", "-")
+
+
 def is_positional(param):
     return (
         param.kind == inspect.Parameter.POSITIONAL_ONLY
@@ -45,7 +49,7 @@ def get_param_factory(param, param_factories=None):
 
 def define_params(params, parser, param_factories):
     for param in params:
-        param_display_name = param.name.strip("_").replace("_", "-")
+        param_display_name = kebab_case(param.name)
         has_default = param.default != inspect.Parameter.empty
         help_parts = {
             "required": (
