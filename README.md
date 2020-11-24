@@ -35,6 +35,7 @@ Bargeparse introspects your function signature using argparse to create a CLI wi
 * Automatically create CLI "positional" or "optional" arguments from function parameters based on whether they have a
   default value; or whether they are positional-only or keyword-only.
 * Choice support via enums.
+* Subcommands defined by separate functions.
 * Help & usage messages as defined by argparse, using the function's docstring as the description.
 
 
@@ -112,6 +113,30 @@ differently as [the default enum support is not very user-friendly](https://bugs
 * The choices are listed as the enum's member values rather than the string representation of the members
 * Choice membership is tested before converting to the enumerated type to allow argparse to give a better error message
   for invalid values.
+
+
+## Subcommands
+
+Sucommands are supported by registering their existence with the main command's through the `@bargeparse.subcommand`
+decorator. To invoke the argparse parser for the main command and all subcommands simply run the main command.
+
+A shortcut decorator is set on the main command's function for convenience.
+
+```python
+@bargeparse.command
+def main_command(global_option: bool = False):
+    """
+    Documentation for main command
+    """
+    # ... code executed when no subcommand is specified
+
+@main_command.subcommand
+def subcommand(option: bool = False, **kwargs):
+    """
+    Documentation for subcommand
+    """
+    # ... global_option passed in through var args
+```
 
 
 ## Usage
@@ -317,6 +342,52 @@ sample_api.py: error: argument choice: invalid choice: 'invalid' (choose from 'f
 
 $ python sample_api.py first
 <Choices.FIRST: 'first'>
+```
+
+
+### Subcommands
+
+```python
+@command
+def main_command(global_option: bool = False):
+    """
+    Documentation for main command
+    """
+
+@main_command.subcommand
+def subcommand(option: bool = False, **kwargs):
+    """
+    Documentation for subcommand
+    """
+    pprint(option, kwargs)
+```
+
+```
+$ python main_command.py --help
+usage: main_command.py [-h] [--global-option] {subcommand} ...
+
+Documentation for main command
+
+positional arguments:
+  {subcommand}
+    subcommand     Documentation for subcommand
+
+optional arguments:
+  -h, --help       show this help message and exit
+  --global-option
+
+$ python main_command.py subcommand --help
+usage: main.py subcommand [-h] [--option]
+
+Documentation for subcommand
+
+optional arguments:
+  -h, --help  show this help message and exit
+  --option
+
+$ python main_command.py --global-option subcommand
+False
+{'global_option': True} 
 ```
 
 

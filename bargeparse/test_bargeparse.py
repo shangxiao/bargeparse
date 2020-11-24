@@ -8,7 +8,7 @@ from datetime import date, datetime
 
 import pytest
 
-from bargeparse import command
+from bargeparse import command, subcommand
 
 
 def test_command_no_params(monkeypatch):
@@ -335,5 +335,101 @@ def test_enum_choices_invalid_argument(monkeypatch, capsys):
         == """\
 usage: prog [-h] a
 prog: error: argument a: invalid choice: 'invalid' (choose from 'first', 'second')
+"""
+    )
+
+
+def test_subcommand(monkeypatch):
+    captured_global_option = None
+    captured_foo = None
+    monkeypatch.setattr("argparse._sys.argv", ["", "--global-option", "subfunc", "bar"])
+
+    @command
+    def func(global_option: bool = False):
+        ...
+
+    @func.subcommand
+    def subfunc(foo, **kwargs):
+        nonlocal captured_global_option
+        nonlocal captured_foo
+        captured_global_option = kwargs["global_option"]
+        captured_foo = foo
+
+    func()
+
+    assert captured_global_option is True
+    assert captured_foo == "bar"
+
+
+def test_main_command_with_subcommand(monkeypatch):
+    captured_global_option = None
+    monkeypatch.setattr("argparse._sys.argv", ["", "--global-option"])
+
+    @command
+    def func(global_option: bool = False):
+        nonlocal captured_global_option
+        captured_global_option = global_option
+
+    @func.subcommand
+    def subfunc(foo, **kwargs):
+        ...
+
+    func()
+
+    assert captured_global_option is True
+
+
+def test_subcommand_can_be_called_directly():
+    captured_bar = None
+
+    @command
+    def parent():
+        ...
+
+    @subcommand(parent)
+    def foo(bar):
+        nonlocal captured_bar
+        captured_bar = bar
+
+    foo("buzz")
+
+    assert captured_bar == "buzz"
+
+
+def test_main_help_with_subcommands(monkeypatch, capsys):
+    def raise_an_exception(_):
+        raise Exception()
+
+    monkeypatch.setattr("argparse._sys.argv", ["", "--help"])
+    # raise an exception instead of exiting (or attempting to call func() with missing args)
+    monkeypatch.setattr("argparse._sys.exit", raise_an_exception)
+
+    @command
+    def parent():
+        ...
+
+    @parent.subcommand
+    def foo():
+        ...
+
+    @parent.subcommand
+    def bar():
+        ...
+
+    with pytest.raises(Exception):
+        parent()
+
+    assert (
+        capsys.readouterr().out
+        == """\
+usage: [-h] {foo,bar} ...
+
+positional arguments:
+  {foo,bar}
+    foo
+    bar
+
+optional arguments:
+  -h, --help  show this help message and exit
 """
     )

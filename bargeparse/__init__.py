@@ -1,3 +1,3 @@
-from .command import command
+from .command import command, subcommand
 
-__all__ = ["command"]
+__all__ = ["command", "subcommand"]

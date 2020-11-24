@@ -2,6 +2,7 @@ import argparse
 import datetime
 import enum
 import inspect
+import itertools
 import re
 import textwrap
 import typing
@@ -148,10 +149,33 @@ def cli(func, param_factories=None):
     params = inspect.signature(func).parameters.values()
     define_params(params, parser, param_factories)
 
+    if func._subcommands:
+        subparsers = parser.add_subparsers()
+        for subcommand in func._subcommands:
+            subcommand_description = (
+                textwrap.dedent(subcommand.__doc__) if subcommand.__doc__ else None
+            )
+            subparser = subparsers.add_parser(
+                kebab_case(subcommand.__name__),
+                description=subcommand_description,
+                help=subcommand_description,
+            )
+            subparser.set_defaults(func=subcommand)
+            subcommand_params = inspect.signature(subcommand).parameters.values()
+            define_params(subcommand_params, subparser, param_factories)
+
     arg_namespace = parser.parse_args()
+
+    if func._subcommands and hasattr(arg_namespace, "func"):
+        all_params = itertools.chain(
+            params, inspect.signature(arg_namespace.func).parameters.values()
+        )
+    else:
+        all_params = params
+
     args = []
     kwargs = {}
-    for param in params:
+    for param in all_params:
         if param.name not in arg_namespace:
             # skip suppressed optional args with defaults that were not supplied
             continue
@@ -159,4 +183,5 @@ def cli(func, param_factories=None):
             args.append(getattr(arg_namespace, param.name))
         else:
             kwargs[param.name] = getattr(arg_namespace, param.name)
-    func(*args, **kwargs)
+
+    getattr(arg_namespace, "func", func)(*args, **kwargs)
