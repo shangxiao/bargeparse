@@ -25,6 +25,19 @@ def test_command_no_params(monkeypatch):
     assert func_run
 
 
+def test_command_can_be_called_directly_bypassing_cli_parsing():
+    captured_a = None
+
+    @command
+    def func(a):
+        nonlocal captured_a
+        captured_a = a
+
+    func("foo")
+
+    assert captured_a == "foo"
+
+
 def test_args_and_kwargs(monkeypatch):
     captured_a = None
     captured_b = None
