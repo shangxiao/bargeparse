@@ -54,7 +54,9 @@ def test_help_renders_docstring_and_correct_help_messages(monkeypatch, capsys):
         kwarg_5: bool = False,
     ):
         """
-        Helpful help message
+        Helpful help message.
+
+        This paragraph should describe the command in more detail.
         """
 
     with pytest.raises(Exception):
@@ -65,7 +67,9 @@ def test_help_renders_docstring_and_correct_help_messages(monkeypatch, capsys):
         == """\
 usage: [-h] --arg-2 [--arg-3] --kwarg-1 KWARG_1 --kwarg-2 [--kwarg-3 KWARG_3] [--kwarg-4 KWARG_4] [--kwarg-5] arg-1 [arg-4] [arg-5]
 
-Helpful help message
+Helpful help message.
+
+This paragraph should describe the command in more detail.
 
 positional arguments:
   arg-1
