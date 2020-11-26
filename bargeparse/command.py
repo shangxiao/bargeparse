@@ -4,6 +4,10 @@ from bargeparse.cli import cli
 
 
 def command(*args, param_factories=None):
+    """
+    Decorator to create a CLI from the function's signature.
+    """
+
     def decorator(func):
         func._subcommands = []
         func.subcommand = functools.partial(
@@ -27,6 +31,10 @@ def command(*args, param_factories=None):
 
 
 def subcommand(parent_command, *args, param_factories=None):
+    """
+    Decorator to register a function as a subcommand of a given parent command.
+    """
+
     def decorator(func):
         parent_command._subcommands.append(func)
         return func
