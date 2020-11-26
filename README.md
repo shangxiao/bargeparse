@@ -46,7 +46,7 @@ pip install bargeparse
 
 ## Mapping of Function Parameters to CLI Arguments
 
-*Note: `argparse` uses the uses the terminology "positional" to denote regular arguments passed to a command and "optional" to
+*Note: `argparse` uses the terminology "positional" to denote regular arguments passed to a command and "optional" to
 denote arguments supplied as flags in either short or long format (eg `-h / --help`). Both argument types can be made to
 be required or optional with `argparse`. `bargeparse` makes no attempt to force one way or the other and leaves that
 choice up to the developer.*
