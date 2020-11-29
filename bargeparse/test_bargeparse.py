@@ -1,3 +1,5 @@
+import enum
+import os
 import pathlib
 import sys
 import typing
@@ -240,3 +242,71 @@ def test_register_other_types(monkeypatch):
     func()
 
     assert captured_foo == CustomType("a", "b")
+
+
+def test_enum_choices_valid_argument(monkeypatch):
+    captured_a = None
+    monkeypatch.setattr("argparse._sys.argv", ["", "first"])
+
+    class Choices(enum.Enum):
+        FIRST = "first"
+        SECOND = "second"
+
+    @command
+    def func(a: Choices):
+        nonlocal captured_a
+        captured_a = a
+
+    func()
+
+    assert captured_a == Choices.FIRST
+
+
+def test_enum_choices_multiple_valid_arguments(monkeypatch):
+    captured_a = None
+    monkeypatch.setattr("argparse._sys.argv", ["", "first", "second"])
+
+    class Choices(enum.Enum):
+        FIRST = "first"
+        SECOND = "second"
+
+    @command
+    def func(a: typing.List[Choices]):
+        nonlocal captured_a
+        captured_a = a
+
+    func()
+
+    assert captured_a == [Choices.FIRST, Choices.SECOND]
+
+
+def test_enum_choices_invalid_argument(monkeypatch, capsys):
+    def raise_an_exception(_):
+        raise Exception()
+
+    captured_a = None
+    monkeypatch.setattr("argparse._sys.argv", ["prog", "invalid"])
+    monkeypatch.setattr("argparse._sys.exit", raise_an_exception)
+    monkeypatch.setattr(
+        "shutil.get_terminal_size", lambda: os.terminal_size((1000, 1000))
+    )
+
+    class Choices(enum.Enum):
+        FIRST = "first"
+        SECOND = "second"
+
+    @command
+    def func(a: Choices):
+        nonlocal captured_a
+        captured_a = a
+
+    with pytest.raises(Exception):
+        func()
+
+    assert (
+        capsys.readouterr().err
+        == """\
+usage: prog [-h] a
+prog: error: argument a: invalid choice: 'invalid' (choose from 'first', 'second')
+"""
+    )

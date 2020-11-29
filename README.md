@@ -34,6 +34,7 @@ Bargeparse introspects your function signature using argparse to create a CLI wi
 * Type casting using typehints in the signature with special support for booleans and lists.
 * Automatically create CLI "positional" or "optional" arguments from function parameters based on whether they have a
   default value; or whether they are positional-only or keyword-only.
+* Choice support via enums.
 * Help & usage messages as defined by argparse, using the function's docstring as the description.
 
 
@@ -74,6 +75,7 @@ The following types are supported out of the box:
   * `date` (following the `%Y %m %d` format - delimited with any char)
   * `datetime` (following the `%Y %m %d %H %M %S` format - delimited with any char)
   * `list`, `list[T]`, `typing.List` and `typing.List[T]` where `T` is another supported type other than lists
+  * enums
   * any type that can be invoked like a type factory as described in the [argparse
     docs](https://docs.python.org/3.9/library/argparse.html#type)
 
@@ -99,6 +101,17 @@ option](https://docs.python.org/3/library/argparse.html#nargs). As noted in the 
 
 Multi-optional arguments must be specified after positional arguments so that the CLI parser understands the boundaries
 between the arguments.
+
+
+## Choices support
+
+[Choices](https://docs.python.org/3/library/argparse.html#choices) are supported through the use of enumerated types.
+Although the argparse documentation mentions that the `choices` option supports enums, bargeparse does things a little
+differently as [the default enum support is not very user-friendly](https://bugs.python.org/issue42501):
+
+* The choices are listed as the enum's member values rather than the string representation of the members
+* Choice membership is tested before converting to the enumerated type to allow argparse to give a better error message
+  for invalid values.
 
 
 ## Usage
@@ -282,6 +295,28 @@ def sample_api(foo: list, bar: list[int] = None):
 $ python sample_api.py 1 2 --bar 1 2 
 ['1', '2']
 [1, 2]
+```
+
+
+### Choices
+
+```python
+class Choices(enum.Enum):
+    FIRST = "first"
+    SECOND = "second"
+
+@bargeparse.command
+def sample_api(choice: Choices):
+    pprint(choice)
+```
+
+```
+$ python sample_api.py invalid
+usage: sample_api.py [-h] choice
+sample_api.py: error: argument choice: invalid choice: 'invalid' (choose from 'first', 'second')
+
+$ python sample_api.py first
+<Choices.FIRST: 'first'>
 ```
 
 

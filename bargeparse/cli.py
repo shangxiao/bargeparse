@@ -1,5 +1,6 @@
 import argparse
 import datetime
+import enum
 import inspect
 import re
 import textwrap
@@ -79,6 +80,7 @@ def cli(func, param_factories=None):
         else:
             arg_type = get_param_factory(param, param_factories)
             nargs = None
+            action = None
 
             # support for list or list[...] types
             if (
@@ -88,15 +90,24 @@ def cli(func, param_factories=None):
             ) in LIST_TYPES:
                 nargs = "*"
                 # be sure to replace the list type with something meaningful if specified, otherwise nothing
-                arg_type = (
-                    param.annotation.__args__[0]
-                    if hasattr(param.annotation, "__args__")
+                has_type = (
+                    hasattr(param.annotation, "__args__")
                     # __args__ is None in Python 3.6
                     and param.annotation.__args__
                     # typing.List seems to have a T type var even if not specified on 3.8.5 ?
                     and type(param.annotation.__args__[0]) != typing.TypeVar
-                    else None
                 )
+                if has_type:
+                    arg_type = param.annotation.__args__[0]
+                else:
+                    arg_type = None
+
+            # support for enums
+            # requires a special action due to enums not being properly supported,
+            # see: https://bugs.python.org/issue42501
+            if inspect.isclass(arg_type) and issubclass(arg_type, enum.Enum):
+                action = actions.enum_action_factory(arg_type)
+                arg_type = None
 
             if is_positional(param):
                 arg_name = param.name
@@ -106,6 +117,7 @@ def cli(func, param_factories=None):
                     # nargs="?" can make a posarg "optional"
                     nargs="?" if has_default else nargs,
                     type=arg_type,
+                    action=action,
                     help=help_msg,
                 )
             else:
@@ -116,6 +128,7 @@ def cli(func, param_factories=None):
                     required=not has_default,
                     nargs=nargs,
                     type=arg_type,
+                    action=action,
                     help=help_msg,
                 )
 

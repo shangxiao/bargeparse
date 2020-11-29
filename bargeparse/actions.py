@@ -44,3 +44,33 @@ class BooleanOptionalAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         if option_string in self.option_strings:
             setattr(namespace, self.dest, not option_string.startswith("--no-"))
+
+
+def enum_action_factory(enum_class):
+    """
+    Factory for a specific action to deal with enums.
+
+    A specific action is required to manage enums that:
+    a.) sets up choices based on the enum members' values;
+    b.) converts to the enum after choice membership is checked in order to
+        provide correct error messages.
+    """
+
+    class EnumAction(argparse.Action):
+        def __init__(self, option_strings, dest, **kwargs):
+            kwargs.pop("choices", None)
+            super().__init__(
+                option_strings,
+                dest,
+                choices=[member.value for member in enum_class],
+                **kwargs,
+            )
+
+        def __call__(self, parser, namespace, values, option_string):
+            if isinstance(values, str):
+                converted_values = enum_class(values)
+            else:
+                converted_values = [enum_class(value) for value in values]
+            setattr(namespace, self.dest, converted_values)
+
+    return EnumAction
