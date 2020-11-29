@@ -99,7 +99,7 @@ def cli(func, param_factories=None):
                     help=help_msg,
                 )
 
-            # support for list or list[T] types
+            # support for list or list[...] types
             if (
                 getattr(param.annotation, "__origin__", param.annotation)
                 # Note: in Python 3.6 typing.List.__origin__ would return None
