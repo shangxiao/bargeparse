@@ -78,6 +78,7 @@ def cli(func, param_factories=None):
             )
         else:
             arg_type = get_param_factory(param, param_factories)
+            nargs = None
 
             if is_positional(param):
                 arg_name = param.name
@@ -85,7 +86,7 @@ def cli(func, param_factories=None):
                     metavar=param_display_name,
                     default=argparse.SUPPRESS,
                     # nargs="?" can make a posarg "optional"
-                    nargs="?" if has_default else None,
+                    nargs="?" if has_default else nargs,
                     type=arg_type,
                     help=help_msg,
                 )
@@ -95,6 +96,7 @@ def cli(func, param_factories=None):
                     dest=param.name,
                     default=argparse.SUPPRESS,
                     required=not has_default,
+                    nargs=nargs,
                     type=arg_type,
                     help=help_msg,
                 )
