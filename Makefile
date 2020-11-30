@@ -1,6 +1,6 @@
 .PHONY: build clean
 
-build:
+build: clean
 	git stash -u
 	python -m pep517.build .
 	git stash pop
