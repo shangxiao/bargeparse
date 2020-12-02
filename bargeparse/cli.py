@@ -202,6 +202,7 @@ def cli(func, param_factories=None):
             subparser = subparsers.add_parser(
                 kebab_case(subcommand.__name__),
                 description=subcommand_description,
+                formatter_class=argparse.RawDescriptionHelpFormatter,
                 help=subcommand_description,
             )
             subparser.set_defaults(func=subcommand)

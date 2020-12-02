@@ -397,6 +397,11 @@ def test_main_help_with_subcommands(prepare_for_output, monkeypatch, capsys):
 
     @parent.subcommand
     def foo():
+        """
+        Foo summary.
+
+        Longer foo description.
+        """
         ...
 
     @parent.subcommand
@@ -413,8 +418,42 @@ usage: prog [-h] {foo,bar} ...
 
 positional arguments:
   {foo,bar}
-    foo
+    foo       Foo summary. Longer foo description.
     bar
+
+optional arguments:
+  -h, --help  show this help message and exit
+"""
+    )
+
+
+def test_subcommand_description(prepare_for_output, monkeypatch, capsys):
+    monkeypatch.setattr("argparse._sys.argv", ["prog", "foo", "--help"])
+
+    @command
+    def parent():
+        ...
+
+    @parent.subcommand
+    def foo():
+        """
+        Foo summary.
+
+        Longer foo description.
+        """
+        ...
+
+    with pytest.raises(Exception):
+        parent()
+
+    assert (
+        capsys.readouterr().out
+        == """\
+usage: prog foo [-h]
+
+Foo summary.
+
+Longer foo description.
 
 optional arguments:
   -h, --help  show this help message and exit
