@@ -1,5 +1,3 @@
-import os
-
 import pytest
 
 from bargeparse import command
@@ -27,16 +25,10 @@ def test_pos_only_args(monkeypatch):
     assert captured_c == "c"
 
 
-def test_help_renders_docstring_and_correct_help_messages(monkeypatch, capsys):
-    def raise_an_exception(_):
-        raise Exception()
-
-    monkeypatch.setattr("argparse._sys.argv", ["", "--help"])
-    # raise an exception instead of exiting (or attempting to call func() with missing args)
-    monkeypatch.setattr("argparse._sys.exit", raise_an_exception)
-    monkeypatch.setattr(
-        "shutil.get_terminal_size", lambda: os.terminal_size((1000, 1000))
-    )
+def test_help_renders_docstring_and_correct_help_messages(
+    prepare_for_output, monkeypatch, capsys
+):
+    monkeypatch.setattr("argparse._sys.argv", ["prog", "--help"])
 
     @command
     def func(
@@ -65,7 +57,7 @@ def test_help_renders_docstring_and_correct_help_messages(monkeypatch, capsys):
     assert (
         capsys.readouterr().out
         == """\
-usage: [-h] --arg-2 [--arg-3] --kwarg-1 KWARG_1 --kwarg-2 [--kwarg-3 KWARG_3] [--kwarg-4 KWARG_4] [--kwarg-5] arg-1 [arg-4] [arg-5]
+usage: prog [-h] --arg-2 [--arg-3] --kwarg-1 KWARG_1 --kwarg-2 [--kwarg-3 KWARG_3] [--kwarg-4 KWARG_4] [--kwarg-5] arg-1 [arg-4] [arg-5]
 
 Helpful help message.
 

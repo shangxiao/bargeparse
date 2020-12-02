@@ -1,5 +1,4 @@
 import enum
-import os
 import pathlib
 import sys
 import typing
@@ -307,16 +306,9 @@ def test_enum_choices_multiple_valid_arguments(monkeypatch):
     assert captured_a == [Choices.FIRST, Choices.SECOND]
 
 
-def test_enum_choices_invalid_argument(monkeypatch, capsys):
-    def raise_an_exception(_):
-        raise Exception()
-
+def test_enum_choices_invalid_argument(prepare_for_output, monkeypatch, capsys):
     captured_a = None
     monkeypatch.setattr("argparse._sys.argv", ["prog", "invalid"])
-    monkeypatch.setattr("argparse._sys.exit", raise_an_exception)
-    monkeypatch.setattr(
-        "shutil.get_terminal_size", lambda: os.terminal_size((1000, 1000))
-    )
 
     class Choices(enum.Enum):
         FIRST = "first"
@@ -396,13 +388,8 @@ def test_subcommand_can_be_called_directly():
     assert captured_bar == "buzz"
 
 
-def test_main_help_with_subcommands(monkeypatch, capsys):
-    def raise_an_exception(_):
-        raise Exception()
-
-    monkeypatch.setattr("argparse._sys.argv", ["", "--help"])
-    # raise an exception instead of exiting (or attempting to call func() with missing args)
-    monkeypatch.setattr("argparse._sys.exit", raise_an_exception)
+def test_main_help_with_subcommands(prepare_for_output, monkeypatch, capsys):
+    monkeypatch.setattr("argparse._sys.argv", ["prog", "--help"])
 
     @command
     def parent():
@@ -422,7 +409,7 @@ def test_main_help_with_subcommands(monkeypatch, capsys):
     assert (
         capsys.readouterr().out
         == """\
-usage: [-h] {foo,bar} ...
+usage: prog [-h] {foo,bar} ...
 
 positional arguments:
   {foo,bar}
@@ -435,13 +422,8 @@ optional arguments:
     )
 
 
-def test_parameter_help(monkeypatch, capsys):
-    def raise_an_exception(_):
-        raise Exception()
-
+def test_parameter_help(prepare_for_output, monkeypatch, capsys):
     monkeypatch.setattr("argparse._sys.argv", ["prog", "--help"])
-    # raise an exception instead of exiting (or attempting to call func() with missing args)
-    monkeypatch.setattr("argparse._sys.exit", raise_an_exception)
 
     # fmt: off
     @command
