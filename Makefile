@@ -1,4 +1,4 @@
-.PHONY: build clean
+.PHONY: build deploy clean
 
 build: clean
 	git stash -u
