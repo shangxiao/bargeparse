@@ -34,7 +34,7 @@ Bargeparse introspects your function signature using argparse to create a CLI wi
 * Type casting using typehints in the signature with special support for booleans and lists.
 * Automatically create CLI "positional" or "optional" arguments from function parameters based on whether they have a
   default value; or whether they are positional-only or keyword-only.
-* Choice support via enums.
+* Choices via enums.
 * Subcommands defined by separate functions.
 * Help & usage messages as defined by argparse, using the function's docstring as the description.
 
@@ -104,7 +104,7 @@ Multi-optional arguments must be specified after positional arguments so that th
 between the arguments.
 
 
-## Choices support
+## Choices
 
 [Choices](https://docs.python.org/3/library/argparse.html#choices) are supported through the use of enumerated types.
 Although the argparse documentation mentions that the `choices` option supports enums, bargeparse does things a little
@@ -348,7 +348,7 @@ $ python sample_api.py first
 ### Subcommands
 
 ```python
-@command
+@bargeparse.command
 def main_command(global_option: bool = False):
     """
     Documentation for main command
