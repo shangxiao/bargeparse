@@ -74,16 +74,16 @@ This paragraph should describe the command in more detail.
 positional arguments:
   arg-1
   arg-4
-  arg-5                 default: arg_5
+  arg-5                 (default: arg_5)
 
 optional arguments:
   -h, --help            show this help message and exit
-  --arg-2, --no-arg-2   required
+  --arg-2, --no-arg-2   (required)
   --arg-3
-  --kwarg-1 KWARG_1     required
+  --kwarg-1 KWARG_1     (required)
   --kwarg-2, --no-kwarg-2
-                        required
-  --kwarg-3 KWARG_3     default: kwarg_3
+                        (required)
+  --kwarg-3 KWARG_3     (default: kwarg_3)
   --kwarg-4 KWARG_4
   --kwarg-5
 """

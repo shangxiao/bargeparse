@@ -36,7 +36,8 @@ Bargeparse introspects your function signature using argparse to create a CLI wi
   default value; or whether they are positional-only or keyword-only.
 * Choices via enums.
 * Subcommands defined by separate functions.
-* Help & usage messages as defined by argparse, using the function's docstring as the description.
+* Help & usage messages as defined by argparse, using the function's docstring as the description and parameter comments
+  for argument help messages.
 
 
 ## Installation
@@ -102,6 +103,20 @@ option](https://docs.python.org/3/library/argparse.html#nargs). As noted in the 
 
 Multi-optional arguments must be specified after positional arguments so that the CLI parser understands the boundaries
 between the arguments.
+
+
+## Parameter Help
+
+Parameter help messages can be added by using comments.  Comments are linked to
+the immediately preceding comment on the same line:
+
+```python
+@bargeparse.command
+def cli(
+    foo:  # Help message for foo
+):
+    ...
+```
 
 
 ## Choices
@@ -320,6 +335,31 @@ def sample_api(foo: list, bar: list[int] = None):
 $ python sample_api.py 1 2 --bar 1 2 
 ['1', '2']
 [1, 2]
+```
+
+
+### Parameter help
+
+```python
+@bargeparse.command
+def sample_api(
+    a,  # Help message for 'a'
+    b, c  # Help message for 'c'
+):
+    ...
+```
+
+```
+$ python sample_api.py --help
+usage: sample_api.py [-h] a b c
+
+positional arguments:
+  a           Help message for 'a'
+  b
+  c           Help message for 'c'
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 

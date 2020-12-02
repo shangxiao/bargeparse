@@ -1,10 +1,14 @@
 import argparse
+import ast
 import datetime
 import enum
 import inspect
+import io
 import itertools
 import re
 import textwrap
+import token
+import tokenize
 import typing
 
 from . import actions
@@ -12,6 +16,12 @@ from . import actions
 LIST_TYPES = (
     typing.List,
     list,  # as of Python 3.9
+)
+
+TOKENS_PRECEDING_PARAM = (
+    token.LPAR,
+    token.COMMA,
+    tokenize.NL,  # only in tokenize <3.7
 )
 
 
@@ -48,7 +58,7 @@ def get_param_factory(param, param_factories=None):
         return param.annotation
 
 
-def define_params(params, parser, param_factories):
+def define_params(params, parser, param_factories, param_comments):
     for param in params:
         if param.kind in (
             inspect.Parameter.VAR_POSITIONAL,
@@ -58,7 +68,9 @@ def define_params(params, parser, param_factories):
 
         param_display_name = kebab_case(param.name)
         has_default = param.default != inspect.Parameter.empty
-        help_parts = {
+
+        help_msg = param_comments.get(param.name)
+        additional_help_parts = {
             "required": (
                 not has_default
                 and (not is_positional(param) or param.annotation == bool)
@@ -67,7 +79,13 @@ def define_params(params, parser, param_factories):
                 has_default and param.default is not None and param.annotation != bool
             ),
         }
-        help_msg = ", ".join(part for part, pred in help_parts.items() if pred)
+        additional_help_msg = ", ".join(
+            part for part, pred in additional_help_parts.items() if pred
+        )
+        if help_msg and additional_help_msg:
+            help_msg = f"{help_msg} ({additional_help_msg})"
+        elif additional_help_msg:
+            help_msg = f"({additional_help_msg})"
 
         if param.annotation == bool:
             # booleans are always optional for both types of parameters
@@ -140,6 +158,30 @@ def define_params(params, parser, param_factories):
         parser.add_argument(arg_name, **arg_options)
 
 
+def get_param_comments(func):
+    param_names = [p.name for p in inspect.signature(func).parameters.values()]
+    source = inspect.getsource(func)
+    body_lineno = ast.parse(textwrap.dedent(source)).body[0].body[0].lineno
+    tokens = tokenize.tokenize(io.BytesIO(source.encode("utf-8")).readline)
+    prev_t = None
+    prev_name = None
+    comments = {}
+    for t in tokens:
+        if t.start[0] >= body_lineno:
+            break
+        if (
+            t.exact_type == token.NAME
+            and t.string in param_names
+            and prev_t.exact_type in TOKENS_PRECEDING_PARAM
+        ):
+            prev_name = t.string
+        # <3.7 COMMENT is only available in tokenize
+        if t.exact_type == tokenize.COMMENT and prev_name:
+            comments[prev_name] = t.string.lstrip("#").strip()
+        prev_t = t
+    return comments
+
+
 def cli(func, param_factories=None):
     description = textwrap.dedent(func.__doc__) if func.__doc__ else None
     parser = argparse.ArgumentParser(
@@ -147,7 +189,9 @@ def cli(func, param_factories=None):
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     params = inspect.signature(func).parameters.values()
-    define_params(params, parser, param_factories)
+    param_comments = get_param_comments(func)
+
+    define_params(params, parser, param_factories, param_comments)
 
     if func._subcommands:
         subparsers = parser.add_subparsers()
@@ -162,7 +206,10 @@ def cli(func, param_factories=None):
             )
             subparser.set_defaults(func=subcommand)
             subcommand_params = inspect.signature(subcommand).parameters.values()
-            define_params(subcommand_params, subparser, param_factories)
+            subcommand_param_comments = get_param_comments(subcommand)
+            define_params(
+                subcommand_params, subparser, param_factories, subcommand_param_comments
+            )
 
     arg_namespace = parser.parse_args()
 

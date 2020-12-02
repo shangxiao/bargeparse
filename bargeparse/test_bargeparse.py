@@ -433,3 +433,45 @@ optional arguments:
   -h, --help  show this help message and exit
 """
     )
+
+
+def test_parameter_help(monkeypatch, capsys):
+    def raise_an_exception(_):
+        raise Exception()
+
+    monkeypatch.setattr("argparse._sys.argv", ["prog", "--help"])
+    # raise an exception instead of exiting (or attempting to call func() with missing args)
+    monkeypatch.setattr("argparse._sys.exit", raise_an_exception)
+
+    # fmt: off
+    @command
+    def func(
+        *,
+        a,  # Help message for 'a'
+        b: str,  # Help message for 'b'
+        c: str = 'Default for c',  # Help message for 'c'
+        d, e,  # Help message for 'e'
+        f, g  # Help message for 'g'
+    ):
+        ...
+    # fmt: on
+
+    with pytest.raises(Exception):
+        func()
+
+    assert (
+        capsys.readouterr().out
+        == """\
+usage: prog [-h] --a A --b B [--c C] --d D --e E --f F --g G
+
+optional arguments:
+  -h, --help  show this help message and exit
+  --a A       Help message for 'a' (required)
+  --b B       Help message for 'b' (required)
+  --c C       Help message for 'c' (default: Default for c)
+  --d D       (required)
+  --e E       Help message for 'e' (required)
+  --f F       (required)
+  --g G       Help message for 'g' (required)
+"""
+    )
