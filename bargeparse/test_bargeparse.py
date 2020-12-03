@@ -24,8 +24,9 @@ def test_command_no_params(monkeypatch):
     assert func_run
 
 
-def test_command_can_be_called_directly_bypassing_cli_parsing():
+def test_command_can_be_called_directly_bypassing_cli_parsing(monkeypatch):
     captured_a = None
+    monkeypatch.setattr("argparse._sys.argv", ["", "wrong value"])
 
     @command
     def func(a):
