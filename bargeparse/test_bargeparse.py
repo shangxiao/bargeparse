@@ -389,7 +389,9 @@ def test_subcommand_can_be_called_directly():
     assert captured_bar == "buzz"
 
 
-def test_main_help_with_subcommands(prepare_for_output, monkeypatch, capsys):
+def test_main_help_with_subcommands_only_shows_summary(
+    prepare_for_output, monkeypatch, capsys
+):
     monkeypatch.setattr("argparse._sys.argv", ["prog", "--help"])
 
     @command
@@ -419,7 +421,7 @@ usage: prog [-h] {foo,bar} ...
 
 positional arguments:
   {foo,bar}
-    foo       Foo summary. Longer foo description.
+    foo       Foo summary.
     bar
 
 optional arguments:

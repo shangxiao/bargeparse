@@ -201,11 +201,20 @@ def cli(func, param_factories=None):
                 if subcommand.__doc__
                 else None
             )
+            subcommand_summary = (
+                "\n".join(
+                    itertools.takewhile(
+                        lambda line: line.strip(), subcommand_description.splitlines()
+                    )
+                )
+                if subcommand_description
+                else None
+            )
             subparser = subparsers.add_parser(
                 kebab_case(subcommand.__name__),
                 description=subcommand_description,
                 formatter_class=argparse.RawDescriptionHelpFormatter,
-                help=subcommand_description,
+                help=subcommand_summary,
             )
             subparser.set_defaults(func=subcommand)
             subcommand_params = inspect.signature(subcommand).parameters.values()

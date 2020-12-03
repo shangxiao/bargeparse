@@ -387,17 +387,22 @@ $ python sample_api.py first
 
 ### Subcommands
 
+Note here that the first paragraph of the subcommand's docstring is assumed to be the summary and is used for the help
+message for the subcommand in the main command's usage.
+
 ```python
 @bargeparse.command
 def main_command(global_option: bool = False):
     """
-    Documentation for main command
+    Documentation for main command.
     """
 
 @main_command.subcommand
 def subcommand(option: bool = False, **kwargs):
     """
-    Documentation for subcommand
+    Summary for subcommand.
+
+    Longer description for subcommand.
     """
     pprint(option, kwargs)
 ```
@@ -406,11 +411,11 @@ def subcommand(option: bool = False, **kwargs):
 $ python main_command.py --help
 usage: main_command.py [-h] [--global-option] {subcommand} ...
 
-Documentation for main command
+Documentation for main command.
 
 positional arguments:
   {subcommand}
-    subcommand     Documentation for subcommand
+    subcommand     Summary for subcommand.
 
 optional arguments:
   -h, --help       show this help message and exit
@@ -419,7 +424,9 @@ optional arguments:
 $ python main_command.py subcommand --help
 usage: main.py subcommand [-h] [--option]
 
-Documentation for subcommand
+Summary for subcommand.
+
+Longer description for subcommand.
 
 optional arguments:
   -h, --help  show this help message and exit
