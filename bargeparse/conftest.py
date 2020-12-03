@@ -15,7 +15,8 @@ def raise_an_exception(_):
 def prepare_for_output(monkeypatch):
     # terminal size affects output display so force a consistent size
     monkeypatch.setattr(
-        "shutil.get_terminal_size", lambda: os.terminal_size((1000, 1000))
+        "shutil.get_terminal_size",
+        lambda *args, **kwargs: os.terminal_size((1000, 1000)),
     )
     # raise an exception instead of exiting (or attempting to call func() with missing args)
     monkeypatch.setattr("argparse._sys.exit", raise_an_exception)
