@@ -474,7 +474,10 @@ def test_parameter_help(prepare_for_output, monkeypatch, capsys):
         d, e,  # Help message for 'e'
         f, g  # Help message for 'g'
     ):
-        ...
+        def inner_func(
+            a,  # This should not be the help message for 'a'
+        ):
+            ...
     # fmt: on
 
     with pytest.raises(Exception):
