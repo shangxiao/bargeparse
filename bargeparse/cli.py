@@ -183,7 +183,7 @@ def get_param_comments(func):
 
 
 def cli(func, param_factories=None):
-    description = textwrap.dedent(func.__doc__) if func.__doc__ else None
+    description = textwrap.dedent(func.__doc__).strip() if func.__doc__ else None
     parser = argparse.ArgumentParser(
         description=description,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -197,7 +197,9 @@ def cli(func, param_factories=None):
         subparsers = parser.add_subparsers()
         for subcommand in func._subcommands:
             subcommand_description = (
-                textwrap.dedent(subcommand.__doc__) if subcommand.__doc__ else None
+                textwrap.dedent(subcommand.__doc__).strip()
+                if subcommand.__doc__
+                else None
             )
             subparser = subparsers.add_parser(
                 kebab_case(subcommand.__name__),
