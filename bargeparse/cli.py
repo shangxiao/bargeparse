@@ -202,7 +202,7 @@ def cli(func, param_factories=None):
                 else None
             )
             subcommand_summary = (
-                "\n".join(
+                " ".join(
                     itertools.takewhile(
                         lambda line: line.strip(), subcommand_description.splitlines()
                     )
