@@ -401,7 +401,8 @@ def test_main_help_with_subcommands_only_shows_summary(
     @parent.subcommand
     def foo():
         """
-        Foo summary.
+        Foo summary
+        split over multiple lines.
 
         Longer foo description.
         """
@@ -421,7 +422,7 @@ usage: prog [-h] {foo,bar} ...
 
 positional arguments:
   {foo,bar}
-    foo       Foo summary.
+    foo       Foo summary split over multiple lines.
     bar
 
 optional arguments:
@@ -440,7 +441,8 @@ def test_subcommand_description(prepare_for_output, monkeypatch, capsys):
     @parent.subcommand
     def foo():
         """
-        Foo summary.
+        Foo summary
+        split over multiple lines.
 
         Longer foo description.
         """
@@ -454,7 +456,8 @@ def test_subcommand_description(prepare_for_output, monkeypatch, capsys):
         == """\
 usage: prog foo [-h]
 
-Foo summary.
+Foo summary
+split over multiple lines.
 
 Longer foo description.
 
