@@ -66,96 +66,99 @@ def define_params(params, parser, param_factories, param_comments):
         ):
             continue
 
-        param_display_name = kebab_case(param.name)
-        has_default = param.default != inspect.Parameter.empty
+        add_param(param, parser, param_factories, param_comments)
 
-        help_msg = param_comments.get(param.name)
-        additional_help_parts = {
-            "required": (
-                not has_default
-                and (not is_positional(param) or param.annotation == bool)
+
+def add_param(param, parser, param_factories, param_comments):
+    param_display_name = kebab_case(param.name)
+    has_default = param.default != inspect.Parameter.empty
+
+    help_msg = param_comments.get(param.name)
+    additional_help_parts = {
+        "required": (
+            not has_default and (not is_positional(param) or param.annotation == bool)
+        ),
+        f"default: {param.default}": (
+            has_default and param.default is not None and param.annotation != bool
+        ),
+    }
+    additional_help_msg = ", ".join(
+        part for part, pred in additional_help_parts.items() if pred
+    )
+    if help_msg and additional_help_msg:
+        help_msg = f"{help_msg} ({additional_help_msg})"
+    elif additional_help_msg:
+        help_msg = f"({additional_help_msg})"
+
+    if param.annotation == bool:
+        # booleans are always optional for both types of parameters
+        arg_name = f"--{param_display_name}"
+        arg_options = dict(
+            dest=param.name,
+            action=(
+                actions.BooleanOptionalAction
+                if not has_default
+                else f"store_{str(not param.default).lower()}"
             ),
-            f"default: {param.default}": (
-                has_default and param.default is not None and param.annotation != bool
-            ),
-        }
-        additional_help_msg = ", ".join(
-            part for part, pred in additional_help_parts.items() if pred
+            required=not has_default,
+            help=help_msg,
         )
-        if help_msg and additional_help_msg:
-            help_msg = f"{help_msg} ({additional_help_msg})"
-        elif additional_help_msg:
-            help_msg = f"({additional_help_msg})"
+    else:
+        arg_type = get_param_factory(param, param_factories)
+        nargs = None
+        action = None
 
-        if param.annotation == bool:
-            # booleans are always optional for both types of parameters
-            arg_name = f"--{param_display_name}"
+        # support for list or list[...] types
+        if (
+            getattr(param.annotation, "__origin__", param.annotation)
+            # Note: in Python 3.6 typing.List.__origin__ would return None
+            or param.annotation
+        ) in LIST_TYPES:
+            nargs = "*"
+            # be sure to replace the list type with something meaningful if specified, otherwise nothing
+            has_type = (
+                hasattr(param.annotation, "__args__")
+                # __args__ is None in Python 3.6
+                and param.annotation.__args__
+                # typing.List seems to have a T type var even if not specified on 3.8.5 ?
+                and type(param.annotation.__args__[0]) != typing.TypeVar
+            )
+            if has_type:
+                arg_type = param.annotation.__args__[0]
+            else:
+                arg_type = None
+
+        # support for enums
+        # requires a special action due to enums not being properly supported,
+        # see: https://bugs.python.org/issue42501
+        if inspect.isclass(arg_type) and issubclass(arg_type, enum.Enum):
+            action = actions.enum_action_factory(arg_type)
+            arg_type = None
+
+        if is_positional(param):
+            arg_name = param.name
             arg_options = dict(
-                dest=param.name,
-                action=(
-                    actions.BooleanOptionalAction
-                    if not has_default
-                    else f"store_{str(not param.default).lower()}"
-                ),
-                required=not has_default,
+                metavar=param_display_name,
+                default=argparse.SUPPRESS,
+                # nargs="?" can make a posarg "optional"
+                nargs="?" if has_default else nargs,
+                type=arg_type,
+                action=action,
                 help=help_msg,
             )
         else:
-            arg_type = get_param_factory(param, param_factories)
-            nargs = None
-            action = None
+            arg_name = f"--{param_display_name}"
+            arg_options = dict(
+                dest=param.name,
+                default=argparse.SUPPRESS,
+                required=not has_default,
+                nargs=nargs,
+                type=arg_type,
+                action=action,
+                help=help_msg,
+            )
 
-            # support for list or list[...] types
-            if (
-                getattr(param.annotation, "__origin__", param.annotation)
-                # Note: in Python 3.6 typing.List.__origin__ would return None
-                or param.annotation
-            ) in LIST_TYPES:
-                nargs = "*"
-                # be sure to replace the list type with something meaningful if specified, otherwise nothing
-                has_type = (
-                    hasattr(param.annotation, "__args__")
-                    # __args__ is None in Python 3.6
-                    and param.annotation.__args__
-                    # typing.List seems to have a T type var even if not specified on 3.8.5 ?
-                    and type(param.annotation.__args__[0]) != typing.TypeVar
-                )
-                if has_type:
-                    arg_type = param.annotation.__args__[0]
-                else:
-                    arg_type = None
-
-            # support for enums
-            # requires a special action due to enums not being properly supported,
-            # see: https://bugs.python.org/issue42501
-            if inspect.isclass(arg_type) and issubclass(arg_type, enum.Enum):
-                action = actions.enum_action_factory(arg_type)
-                arg_type = None
-
-            if is_positional(param):
-                arg_name = param.name
-                arg_options = dict(
-                    metavar=param_display_name,
-                    default=argparse.SUPPRESS,
-                    # nargs="?" can make a posarg "optional"
-                    nargs="?" if has_default else nargs,
-                    type=arg_type,
-                    action=action,
-                    help=help_msg,
-                )
-            else:
-                arg_name = f"--{param_display_name}"
-                arg_options = dict(
-                    dest=param.name,
-                    default=argparse.SUPPRESS,
-                    required=not has_default,
-                    nargs=nargs,
-                    type=arg_type,
-                    action=action,
-                    help=help_msg,
-                )
-
-        parser.add_argument(arg_name, **arg_options)
+    parser.add_argument(arg_name, **arg_options)
 
 
 def get_param_comments(func):
