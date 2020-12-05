@@ -58,17 +58,6 @@ def get_param_factory(param, param_factories=None):
         return param.annotation
 
 
-def define_params(params, parser, param_factories, param_comments):
-    for param in params:
-        if param.kind in (
-            inspect.Parameter.VAR_POSITIONAL,
-            inspect.Parameter.VAR_KEYWORD,
-        ):
-            continue
-
-        add_param(param, parser, param_factories, param_comments)
-
-
 def add_param(param, parser, param_factories, param_comments):
     param_display_name = kebab_case(param.name)
     has_default = param.default != inspect.Parameter.empty
@@ -159,6 +148,17 @@ def add_param(param, parser, param_factories, param_comments):
             )
 
     parser.add_argument(arg_name, **arg_options)
+
+
+def define_params(params, parser, param_factories, param_comments):
+    for param in params:
+        if param.kind in (
+            inspect.Parameter.VAR_POSITIONAL,
+            inspect.Parameter.VAR_KEYWORD,
+        ):
+            continue
+
+        add_param(param, parser, param_factories, param_comments)
 
 
 def get_param_comments(func):
