@@ -58,20 +58,17 @@ def get_param_factory(annotation, param_factories=None):
         return annotation
 
 
-def add_param(param, parser, param_factories, param_comments):
-    param_display_name = kebab_case(param.name)
-    has_default = param.default != inspect.Parameter.empty
+def add_param(parser, name, kind, param_type, default, param_factories, param_comments):
+    param_display_name = kebab_case(name)
+    has_default = default != inspect.Parameter.empty
 
-    help_msg = param_comments.get(param.name)
+    help_msg = param_comments.get(name)
     additional_help_parts = {
         "required": (
-            not has_default
-            and (
-                not is_positional(param.kind, param.default) or param.annotation == bool
-            )
+            not has_default and (not is_positional(kind, default) or param_type == bool)
         ),
-        f"default: {param.default}": (
-            has_default and param.default is not None and param.annotation != bool
+        f"default: {default}": (
+            has_default and default is not None and param_type != bool
         ),
     }
     additional_help_msg = ", ".join(
@@ -82,41 +79,41 @@ def add_param(param, parser, param_factories, param_comments):
     elif additional_help_msg:
         help_msg = f"({additional_help_msg})"
 
-    if param.annotation == bool:
+    if param_type == bool:
         # booleans are always optional for both types of parameters
         arg_name = f"--{param_display_name}"
         arg_options = dict(
-            dest=param.name,
+            dest=name,
             action=(
                 actions.BooleanOptionalAction
                 if not has_default
-                else f"store_{str(not param.default).lower()}"
+                else f"store_{str(not default).lower()}"
             ),
             required=not has_default,
             help=help_msg,
         )
     else:
-        arg_type = get_param_factory(param.annotation, param_factories)
+        arg_type = get_param_factory(param_type, param_factories)
         nargs = None
         action = None
 
         # support for list or list[...] types
         if (
-            getattr(param.annotation, "__origin__", param.annotation)
+            getattr(param_type, "__origin__", param_type)
             # Note: in Python 3.6 typing.List.__origin__ would return None
-            or param.annotation
+            or param_type
         ) in LIST_TYPES:
             nargs = "*"
             # be sure to replace the list type with something meaningful if specified, otherwise nothing
             has_type = (
-                hasattr(param.annotation, "__args__")
+                hasattr(param_type, "__args__")
                 # __args__ is None in Python 3.6
-                and param.annotation.__args__
+                and param_type.__args__
                 # typing.List seems to have a T type var even if not specified on 3.8.5 ?
-                and type(param.annotation.__args__[0]) != typing.TypeVar
+                and type(param_type.__args__[0]) != typing.TypeVar
             )
             if has_type:
-                arg_type = param.annotation.__args__[0]
+                arg_type = param_type.__args__[0]
             else:
                 arg_type = None
 
@@ -127,8 +124,8 @@ def add_param(param, parser, param_factories, param_comments):
             action = actions.enum_action_factory(arg_type)
             arg_type = None
 
-        if is_positional(param.kind, param.default):
-            arg_name = param.name
+        if is_positional(kind, default):
+            arg_name = name
             arg_options = dict(
                 metavar=param_display_name,
                 default=argparse.SUPPRESS,
@@ -141,7 +138,7 @@ def add_param(param, parser, param_factories, param_comments):
         else:
             arg_name = f"--{param_display_name}"
             arg_options = dict(
-                dest=param.name,
+                dest=name,
                 default=argparse.SUPPRESS,
                 required=not has_default,
                 nargs=nargs,
@@ -161,7 +158,15 @@ def define_params(params, parser, param_factories, param_comments):
         ):
             continue
 
-        add_param(param, parser, param_factories, param_comments)
+        add_param(
+            parser,
+            param.name,
+            param.kind,
+            param.annotation,
+            param.default,
+            param_factories,
+            param_comments,
+        )
 
 
 def get_param_comments(func):
