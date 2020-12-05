@@ -29,11 +29,11 @@ def kebab_case(string):
     return string.strip("_").replace("_", "-")
 
 
-def is_positional(param):
+def is_positional(param_kind, default):
     return (
-        param.kind == inspect.Parameter.POSITIONAL_ONLY
-        or param.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
-        and param.default == inspect.Parameter.empty
+        param_kind == inspect.Parameter.POSITIONAL_ONLY
+        or param_kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
+        and default == inspect.Parameter.empty
     )
 
 
@@ -65,7 +65,10 @@ def add_param(param, parser, param_factories, param_comments):
     help_msg = param_comments.get(param.name)
     additional_help_parts = {
         "required": (
-            not has_default and (not is_positional(param) or param.annotation == bool)
+            not has_default
+            and (
+                not is_positional(param.kind, param.default) or param.annotation == bool
+            )
         ),
         f"default: {param.default}": (
             has_default and param.default is not None and param.annotation != bool
@@ -124,7 +127,7 @@ def add_param(param, parser, param_factories, param_comments):
             action = actions.enum_action_factory(arg_type)
             arg_type = None
 
-        if is_positional(param):
+        if is_positional(param.kind, param.default):
             arg_name = param.name
             arg_options = dict(
                 metavar=param_display_name,
@@ -241,7 +244,7 @@ def cli(func, param_factories=None):
         if param.name not in arg_namespace:
             # skip suppressed optional args with defaults that were not supplied
             continue
-        if is_positional(param):
+        if is_positional(param.kind, param.default):
             args.append(getattr(arg_namespace, param.name))
         else:
             kwargs[param.name] = getattr(arg_namespace, param.name)
