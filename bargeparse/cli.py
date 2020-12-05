@@ -45,17 +45,17 @@ def datetime_parser(date_str):
     return datetime.datetime.strptime(re.sub(r"\D", " ", date_str), "%Y %m %d %H %M %S")
 
 
-def get_param_factory(annotation, param_factories=None):
-    if annotation == inspect.Parameter.empty:
+def get_param_factory(param_type, param_factories=None):
+    if param_type == inspect.Parameter.empty:
         return None
-    elif annotation == datetime.date:
+    elif param_type == datetime.date:
         return date_parser
-    elif annotation == datetime.datetime:
+    elif param_type == datetime.datetime:
         return datetime_parser
-    elif param_factories is not None and annotation in param_factories:
-        return param_factories[annotation]
+    elif param_factories is not None and param_type in param_factories:
+        return param_factories[param_type]
     else:
-        return annotation
+        return param_type
 
 
 def add_param(parser, name, kind, param_type, default, param_factories, param_comments):
