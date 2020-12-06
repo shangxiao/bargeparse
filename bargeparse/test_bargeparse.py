@@ -9,6 +9,8 @@ import pytest
 
 from bargeparse import command, subcommand
 
+from .conftest import ExitException
+
 
 def test_command_no_params(monkeypatch):
     func_run = False
@@ -320,7 +322,7 @@ def test_enum_choices_invalid_argument(prepare_for_output, monkeypatch, capsys):
         nonlocal captured_a
         captured_a = a
 
-    with pytest.raises(Exception):
+    with pytest.raises(ExitException):
         func()
 
     assert (
@@ -412,7 +414,7 @@ def test_main_help_with_subcommands_only_shows_summary(
     def bar():
         ...
 
-    with pytest.raises(Exception):
+    with pytest.raises(ExitException):
         parent()
 
     assert (
@@ -448,7 +450,7 @@ def test_subcommand_description(prepare_for_output, monkeypatch, capsys):
         """
         ...
 
-    with pytest.raises(Exception):
+    with pytest.raises(ExitException):
         parent()
 
     assert (
@@ -486,7 +488,7 @@ def test_parameter_help(prepare_for_output, monkeypatch, capsys):
             ...
     # fmt: on
 
-    with pytest.raises(Exception):
+    with pytest.raises(ExitException):
         func()
 
     assert (
