@@ -507,3 +507,59 @@ optional arguments:
   --g G       Help message for 'g' (required)
 """
     )
+
+
+def test_numpy_docstring_usage(prepare_for_output, monkeypatch, capsys):
+    monkeypatch.setattr("argparse._sys.argv", ["prog", "--help"])
+
+    @command
+    def func(a):
+        """
+        Function summary.
+
+        Function description.
+
+        Parameters
+        ----------
+        a
+            Description for 'a'.
+        """
+
+    with pytest.raises(ExitException):
+        func()
+
+    assert (
+        capsys.readouterr().out
+        == """\
+usage: prog [-h] a
+
+Function summary.
+
+Function description.
+
+positional arguments:
+  a           Description for 'a'.
+
+optional arguments:
+  -h, --help  show this help message and exit
+"""
+    )
+
+
+def test_numpy_type_casting(monkeypatch):
+    captured_a = None
+    monkeypatch.setattr("argparse._sys.argv", ["prog", "1"])
+
+    @command
+    def func(a):
+        """
+        Parameters
+        ----------
+        a : int
+        """
+        nonlocal captured_a
+        captured_a = a
+
+    func()
+
+    assert captured_a == 1

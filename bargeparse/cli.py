@@ -11,6 +11,11 @@ import token
 import tokenize
 import typing
 
+try:
+    from numpydoc import docscrape
+except ImportError:
+    docscrape = None
+
 from . import actions
 
 LIST_TYPES = (
@@ -46,9 +51,7 @@ def datetime_parser(date_str):
 
 
 def get_param_factory(param_type, param_factories=None):
-    if param_type == inspect.Parameter.empty:
-        return None
-    elif param_type == datetime.date:
+    if param_type == datetime.date:
         return date_parser
     elif param_type == datetime.datetime:
         return datetime_parser
@@ -150,7 +153,7 @@ def add_param(parser, name, kind, param_type, default, param_factories, param_co
     parser.add_argument(arg_name, **arg_options)
 
 
-def define_params(params, parser, param_factories, param_comments):
+def define_params(params, parser, param_factories, param_comments, numpy_doc):
     for param in params:
         if param.kind in (
             inspect.Parameter.VAR_POSITIONAL,
@@ -158,11 +161,22 @@ def define_params(params, parser, param_factories, param_comments):
         ):
             continue
 
+        param_type = None
+        if param.annotation != inspect.Parameter.empty:
+            param_type = param.annotation
+        elif numpy_doc:
+            for p in numpy_doc["Parameters"]:
+                if p.name == param.name and p.type:
+                    import pydoc
+
+                    param_type = pydoc.locate(p.type)
+                    break
+
         add_param(
             parser,
             param.name,
             param.kind,
-            param.annotation,
+            param_type,
             param.default,
             param_factories,
             param_comments,
@@ -194,19 +208,37 @@ def get_param_comments(func):
 
 
 def cli(func, param_factories=None):
-    description = textwrap.dedent(func.__doc__).strip() if func.__doc__ else None
+    numpy_doc = (
+        docscrape.NumpyDocString(func.__doc__) if docscrape and func.__doc__ else None
+    )
+    description = (
+        "\n\n".join(numpy_doc["Summary"] + numpy_doc["Extended Summary"])
+        if numpy_doc
+        else textwrap.dedent(func.__doc__).strip()
+        if func.__doc__
+        else None
+    )
     parser = argparse.ArgumentParser(
         description=description,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     params = inspect.signature(func).parameters.values()
-    param_comments = get_param_comments(func)
+    param_comments = (
+        {p.name: next(iter(p.desc), None) for p in numpy_doc["Parameters"]}
+        if numpy_doc
+        else get_param_comments(func)
+    )
 
-    define_params(params, parser, param_factories, param_comments)
+    define_params(params, parser, param_factories, param_comments, numpy_doc)
 
     if func._subcommands:
         subparsers = parser.add_subparsers()
         for subcommand in func._subcommands:
+            subcommand_numpy_doc = (
+                docscrape.NumpyDocString(func.__doc__)
+                if docscrape and func.__doc__
+                else None
+            )
             subcommand_description = (
                 textwrap.dedent(subcommand.__doc__).strip()
                 if subcommand.__doc__
@@ -231,7 +263,11 @@ def cli(func, param_factories=None):
             subcommand_params = inspect.signature(subcommand).parameters.values()
             subcommand_param_comments = get_param_comments(subcommand)
             define_params(
-                subcommand_params, subparser, param_factories, subcommand_param_comments
+                subcommand_params,
+                subparser,
+                param_factories,
+                subcommand_param_comments,
+                subcommand_numpy_doc,
             )
 
     arg_namespace = parser.parse_args()
