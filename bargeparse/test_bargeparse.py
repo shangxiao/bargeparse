@@ -328,8 +328,36 @@ def test_enum_choices_invalid_argument(prepare_for_output, monkeypatch, capsys):
     assert (
         capsys.readouterr().err
         == """\
-usage: prog [-h] a
+usage: prog [-h] {first,second}
 prog: error: argument a: invalid choice: 'invalid' (choose from 'first', 'second')
+"""
+    )
+
+
+def test_enum_choices_help(prepare_for_output, monkeypatch, capsys):
+    monkeypatch.setattr("argparse._sys.argv", ["prog", "--help"])
+
+    class Choices(enum.Enum):
+        FIRST = "first"
+        SECOND = "second"
+
+    @command
+    def func(a: Choices):
+        ...
+
+    with pytest.raises(ExitException):
+        func()
+
+    assert (
+        capsys.readouterr().out
+        == """\
+usage: prog [-h] {first,second}
+
+positional arguments:
+  {first,second}
+
+optional arguments:
+  -h, --help      show this help message and exit
 """
     )
 

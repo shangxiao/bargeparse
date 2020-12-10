@@ -376,6 +376,15 @@ def sample_api(choice: Choices):
 ```
 
 ```
+$ python sample_api.py --help
+usage: sample_api.py [-h] {first,second}
+
+positional arguments:
+  {first,second}
+
+optional arguments:
+  -h, --help      show this help message and exit
+
 $ python sample_api.py invalid
 usage: sample_api.py [-h] choice
 sample_api.py: error: argument choice: invalid choice: 'invalid' (choose from 'first', 'second')
