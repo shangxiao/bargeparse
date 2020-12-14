@@ -90,6 +90,49 @@ def test_keyword_only_args(monkeypatch):
     assert captured_c == "c"
 
 
+def test_usage_not_enough_args(prepare_for_output, monkeypatch, capsys):
+    monkeypatch.setattr("argparse._sys.argv", ["prog"])
+
+    @command
+    def func(foo):
+        ...
+
+    with pytest.raises(ExitException):
+        func()
+
+    assert (
+        capsys.readouterr().err
+        == """\
+usage: prog [-h] foo
+prog: error: the following arguments are required: foo
+"""
+    )
+
+
+def test_usage_extra_args(prepare_for_output, monkeypatch, capsys):
+    """
+    Make sure that if the function doesn't have a parser/subparser parameter that
+    parse_args() is called instead of parse_known_args() and the relevant usage message
+    is printed for extraneous arguments.
+    """
+    monkeypatch.setattr("argparse._sys.argv", ["prog", "extra"])
+
+    @command
+    def func():
+        ...
+
+    with pytest.raises(ExitException):
+        func()
+
+    assert (
+        capsys.readouterr().err
+        == """\
+usage: prog [-h]
+prog: error: unrecognized arguments: extra
+"""
+    )
+
+
 def test_converts_arg_names_to_kebab_case(monkeypatch):
     captured_positional_argument = None
     captured_optional_argument = None
@@ -533,5 +576,104 @@ optional arguments:
   --e E       Help message for 'e' (required)
   --f F       (required)
   --g G       Help message for 'g' (required)
+"""
+    )
+
+
+def test_force_print_help(prepare_for_output, monkeypatch, capsys):
+    """
+    Test that functions get a handle on the argparse parser to allow customisation or
+    calling of utilities like print_help().
+    """
+    monkeypatch.setattr("argparse._sys.argv", ["prog"])
+
+    @command
+    def func(parser, foo=None):
+        parser.print_help()
+
+    func()
+
+    assert (
+        capsys.readouterr().out
+        == """\
+usage: prog [-h] [--foo FOO]
+
+optional arguments:
+  -h, --help  show this help message and exit
+  --foo FOO
+"""
+    )
+
+
+def test_subcommand_force_print_help(prepare_for_output, monkeypatch, capsys):
+    monkeypatch.setattr("argparse._sys.argv", ["prog", "subfunc"])
+
+    @command
+    def func():
+        ...
+
+    @func.subcommand
+    def subfunc(subparser, foo=None):
+        subparser.print_help()
+
+    func()
+
+    assert (
+        capsys.readouterr().out
+        == """\
+usage: prog subfunc [-h] [--foo FOO]
+
+optional arguments:
+  -h, --help  show this help message and exit
+  --foo FOO
+"""
+    )
+
+
+def test_parser_customisation(prepare_for_output, monkeypatch, capsys):
+    monkeypatch.setattr("argparse._sys.argv", ["prog", "foo", "bar", "buzz"])
+
+    @command
+    def func(parser):
+        parser.add_argument("foo", nargs=2)
+        parser.parse_args()
+
+    with pytest.raises(ExitException):
+        func()
+
+    assert (
+        capsys.readouterr().err
+        == """\
+usage: prog [-h] foo foo
+prog: error: unrecognized arguments: buzz
+"""
+    )
+
+
+def test_subcommand_subparser_customisation(prepare_for_output, monkeypatch, capsys):
+    monkeypatch.setattr("argparse._sys.argv", ["prog", "subfunc"])
+
+    @command
+    def func():
+        ...
+
+    @func.subcommand
+    def subfunc(parser, subparser):
+        subparser.add_argument("foo")
+        parser.parse_args()
+
+    # make sure a second subfunc without a parser param doesn't interfere with things
+    @func.subcommand
+    def subfunc2():
+        ...
+
+    with pytest.raises(ExitException):
+        func()
+
+    assert (
+        capsys.readouterr().err
+        == """\
+usage: prog subfunc [-h] foo
+prog subfunc: error: the following arguments are required: foo
 """
     )

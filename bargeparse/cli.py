@@ -66,6 +66,9 @@ def define_params(params, parser, param_factories, param_comments):
         ):
             continue
 
+        if param.name in ("parser", "subparser"):
+            continue
+
         param_display_name = kebab_case(param.name)
         has_default = param.default != inspect.Parameter.empty
 
@@ -190,6 +193,8 @@ def cli(func, param_factories=None):
     )
     params = inspect.signature(func).parameters.values()
     param_comments = get_param_comments(func)
+    calling_func_requires_parser = "parser" in (p.name for p in params)
+    calling_func_requires_subparser = False
 
     define_params(params, parser, param_factories, param_comments)
 
@@ -216,14 +221,25 @@ def cli(func, param_factories=None):
                 formatter_class=argparse.RawDescriptionHelpFormatter,
                 help=subcommand_summary,
             )
-            subparser.set_defaults(func=subcommand)
+            subparser.set_defaults(func=subcommand, subparser=subparser)
             subcommand_params = inspect.signature(subcommand).parameters.values()
             subcommand_param_comments = get_param_comments(subcommand)
+            if not calling_func_requires_parser:
+                calling_func_requires_parser = "parser" in (
+                    p.name for p in subcommand_params
+                )
+            if not calling_func_requires_subparser:
+                calling_func_requires_subparser = "subparser" in (
+                    p.name for p in subcommand_params
+                )
             define_params(
                 subcommand_params, subparser, param_factories, subcommand_param_comments
             )
 
-    arg_namespace = parser.parse_args()
+    if calling_func_requires_parser or calling_func_requires_subparser:
+        arg_namespace = parser.parse_known_args()[0]
+    else:
+        arg_namespace = parser.parse_args()
 
     if func._subcommands and hasattr(arg_namespace, "func"):
         all_params = itertools.chain(
@@ -234,7 +250,16 @@ def cli(func, param_factories=None):
 
     args = []
     kwargs = {}
+
+    if calling_func_requires_parser:
+        kwargs["parser"] = parser
+
+    if calling_func_requires_subparser:
+        kwargs["subparser"] = arg_namespace.subparser
+
     for param in all_params:
+        if param.name in ("parser", "subparser"):
+            continue
         if param.name not in arg_namespace:
             # skip suppressed optional args with defaults that were not supplied
             continue
