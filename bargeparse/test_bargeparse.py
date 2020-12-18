@@ -535,3 +535,29 @@ optional arguments:
   --g G       Help message for 'g' (required)
 """
     )
+
+
+def test_force_print_help(monkeypatch, capsys):
+    """
+    If the command declares **kwargs then pass the argparse parser for convenience.
+    """
+    monkeypatch.setattr("argparse._sys.argv", ["prog", "foo"])
+
+    @command
+    def func(foo, **kwargs):
+        kwargs["parser"].print_help()
+
+    func()
+
+    assert (
+        capsys.readouterr().out
+        == """\
+usage: prog [-h] foo
+
+positional arguments:
+  foo
+
+optional arguments:
+  -h, --help  show this help message and exit
+"""
+    )

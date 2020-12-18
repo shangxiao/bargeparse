@@ -247,4 +247,13 @@ def cli(func, param_factories=None):
         else:
             kwargs[param.name] = getattr(arg_namespace, param.name)
 
+    # pass the parser if variable keyword parameter present
+    if inspect.Parameter.VAR_KEYWORD in (
+        p.kind
+        for p in inspect.signature(
+            getattr(arg_namespace, "target_func")
+        ).parameters.values()
+    ):
+        kwargs["parser"] = parser
+
     getattr(arg_namespace, "target_func")(*args, **kwargs)
