@@ -159,7 +159,7 @@ def define_params(params, parser, param_factories, param_comments):
 
 
 def get_param_comments(func):
-    param_names = [p.name for p in inspect.signature(func).parameters.values()]
+    params = inspect.signature(func).parameters
     source = inspect.getsource(func)
     body_lineno = ast.parse(textwrap.dedent(source)).body[0].body[0].lineno
     tokens = tokenize.tokenize(io.BytesIO(source.encode("utf-8")).readline)
@@ -171,7 +171,7 @@ def get_param_comments(func):
             break
         if (
             t.exact_type == token.NAME
-            and t.string in param_names
+            and t.string in params
             and prev_t.exact_type in TOKENS_PRECEDING_PARAM
         ):
             prev_name = t.string
