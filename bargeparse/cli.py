@@ -233,7 +233,7 @@ def cli(func, param_factories=None):
 
     arg_namespace = parser.parse_args()
 
-    if func._subcommands and hasattr(arg_namespace, "target_func"):
+    if func._subcommands:
         all_params = list(
             itertools.chain(
                 params, inspect.signature(arg_namespace.target_func).parameters.values()
