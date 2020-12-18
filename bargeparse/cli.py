@@ -190,6 +190,7 @@ def cli(func, param_factories=None):
     )
     params = inspect.signature(func).parameters.values()
     param_comments = get_param_comments(func)
+    parser.set_defaults(target_func=func)
 
     define_params(params, parser, param_factories, param_comments)
 
@@ -216,7 +217,7 @@ def cli(func, param_factories=None):
                 formatter_class=argparse.RawDescriptionHelpFormatter,
                 help=subcommand_summary,
             )
-            subparser.set_defaults(func=subcommand)
+            subparser.set_defaults(target_func=subcommand)
             subcommand_params = inspect.signature(subcommand).parameters.values()
             subcommand_param_comments = get_param_comments(subcommand)
             define_params(
@@ -225,9 +226,9 @@ def cli(func, param_factories=None):
 
     arg_namespace = parser.parse_args()
 
-    if func._subcommands and hasattr(arg_namespace, "func"):
+    if func._subcommands and hasattr(arg_namespace, "target_func"):
         all_params = itertools.chain(
-            params, inspect.signature(arg_namespace.func).parameters.values()
+            params, inspect.signature(arg_namespace.target_func).parameters.values()
         )
     else:
         all_params = params
@@ -243,4 +244,4 @@ def cli(func, param_factories=None):
         else:
             kwargs[param.name] = getattr(arg_namespace, param.name)
 
-    getattr(arg_namespace, "func", func)(*args, **kwargs)
+    getattr(arg_namespace, "target_func")(*args, **kwargs)
