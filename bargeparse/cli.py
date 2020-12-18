@@ -235,9 +235,12 @@ def cli(func, param_factories=None):
 
     args = []
     kwargs = {}
+
+    # populate the args & kwargs to pass to the target function
     for param in all_params:
         if param.name not in arg_namespace:
             # skip suppressed optional args with defaults that were not supplied
+            # as well as any variable args
             continue
         if is_positional(param):
             args.append(getattr(arg_namespace, param.name))
