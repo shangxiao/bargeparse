@@ -189,8 +189,15 @@ def cli(func, param_factories=None):
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     params = inspect.signature(func).parameters.values()
-    param_comments = get_param_comments(func)
-    parser.set_defaults(target_func=func)
+
+    if "parser" in (p.name for p in params):
+        inner_func = func(parser)
+        params = inspect.signature(inner_func).parameters.values()
+        param_comments = get_param_comments(inner_func)
+        parser.set_defaults(target_func=inner_func)
+    else:
+        param_comments = get_param_comments(func)
+        parser.set_defaults(target_func=func)
 
     define_params(params, parser, param_factories, param_comments)
 
@@ -227,8 +234,10 @@ def cli(func, param_factories=None):
     arg_namespace = parser.parse_args()
 
     if func._subcommands and hasattr(arg_namespace, "target_func"):
-        all_params = itertools.chain(
-            params, inspect.signature(arg_namespace.target_func).parameters.values()
+        all_params = list(
+            itertools.chain(
+                params, inspect.signature(arg_namespace.target_func).parameters.values()
+            )
         )
     else:
         all_params = params
@@ -246,6 +255,14 @@ def cli(func, param_factories=None):
             args.append(getattr(arg_namespace, param.name))
         else:
             kwargs[param.name] = getattr(arg_namespace, param.name)
+
+    # add remaining arguments added from custom parser arguments
+    remaining_arguments = {
+        k: getattr(arg_namespace, k)
+        for k in vars(arg_namespace).keys()
+        if k not in (p.name for p in all_params) and k != "target_func"
+    }
+    kwargs = {**kwargs, **remaining_arguments}
 
     # pass the parser if variable keyword parameter present
     if inspect.Parameter.VAR_KEYWORD in (

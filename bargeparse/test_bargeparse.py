@@ -561,3 +561,32 @@ optional arguments:
   -h, --help  show this help message and exit
 """
     )
+
+
+def test_parser_customisation(monkeypatch):
+    captured_foo = None
+    captured_bar = None
+    captured_buzz = None
+    monkeypatch.setattr(
+        "argparse._sys.argv", ["", "foo1", "foo2", "bar", "--buzz", "buzz"]
+    )
+
+    @command
+    def wrapper(parser):
+        parser.add_argument("foo", nargs=2)
+
+        def func(bar, buzz=None, **kwargs):
+            nonlocal captured_foo
+            nonlocal captured_bar
+            nonlocal captured_buzz
+            captured_foo = kwargs["foo"]
+            captured_bar = bar
+            captured_buzz = buzz
+
+        return func
+
+    wrapper()
+
+    assert captured_foo == ["foo1", "foo2"]
+    assert captured_bar == "bar"
+    assert captured_buzz == "buzz"
