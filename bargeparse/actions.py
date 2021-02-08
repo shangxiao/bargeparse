@@ -46,7 +46,7 @@ class BooleanOptionalAction(argparse.Action):
             setattr(namespace, self.dest, not option_string.startswith("--no-"))
 
 
-def enum_action_factory(enum_class):
+def enum_action_factory(enum_class, use_tuple=False):
     """
     Factory for a specific action to deal with enums.
 
@@ -65,8 +65,20 @@ def enum_action_factory(enum_class):
         def __call__(self, parser, namespace, values, option_string):
             if isinstance(values, str):
                 converted_values = enum_class(values)
+            # FIXME: combine with TupleAction
+            elif use_tuple:
+                converted_values = tuple(enum_class(value) for value in values)
             else:
                 converted_values = [enum_class(value) for value in values]
             setattr(namespace, self.dest, converted_values)
 
     return EnumAction
+
+
+class TupleAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string):
+        if isinstance(values, str):
+            converted_values = (values,)
+        else:
+            converted_values = tuple(values)
+        setattr(namespace, self.dest, converted_values)

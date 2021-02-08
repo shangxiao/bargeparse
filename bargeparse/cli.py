@@ -15,7 +15,10 @@ from . import actions
 
 LIST_TYPES = (
     typing.List,
-    list,  # as of Python 3.9
+    typing.Tuple,
+    # as of Python 3.9
+    list,
+    tuple,
 )
 
 TOKENS_PRECEDING_PARAM = (
@@ -105,12 +108,13 @@ def define_params(params, parser, param_factories, param_comments):
             nargs = None
             action = None
 
-            # support for list or list[...] types
-            if (
+            # support for list, list[...], tuple or tuple[...] types
+            list_type = (
                 getattr(param.annotation, "__origin__", param.annotation)
                 # Note: in Python 3.6 typing.List.__origin__ would return None
                 or param.annotation
-            ) in LIST_TYPES:
+            )
+            if list_type in LIST_TYPES:
                 nargs = "*"
                 # be sure to replace the list type with something meaningful if specified, otherwise nothing
                 has_type = (
@@ -124,12 +128,16 @@ def define_params(params, parser, param_factories, param_comments):
                     arg_type = param.annotation.__args__[0]
                 else:
                     arg_type = None
+                if list_type in (tuple, typing.Tuple):
+                    action = actions.TupleAction
 
             # support for enums
             # requires a special action due to enums not being properly supported,
             # see: https://bugs.python.org/issue42501
             if inspect.isclass(arg_type) and issubclass(arg_type, enum.Enum):
-                action = actions.enum_action_factory(arg_type)
+                action = actions.enum_action_factory(
+                    arg_type, use_tuple=action == actions.TupleAction
+                )
                 arg_type = None
 
             if is_positional(param):

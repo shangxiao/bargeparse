@@ -93,10 +93,10 @@ def cli(foo: CustomType):
     ...
 ```
 
-### A note about lists
+### A note about lists & tuples
 
-Single dimension lists are supported via the [`nargs="*"`
-option](https://docs.python.org/3/library/argparse.html#nargs). As noted in the documentation: 
+Single dimension lists & tuples are supported via the [`nargs="*"`
+option](https://docs.python.org/3/library/argparse.html#nargs). As noted in the documentation:
 
 > Note that it generally doesn’t make much sense to have more than one positional argument with `nargs='*'`, but multiple
 > optional arguments with `nargs='*'` is possible.
@@ -310,18 +310,23 @@ True
 ```
 
 
-### List support
+### List/Tuple support
 
-Lists can be specified with any of the following:
+Lists & tuples can be specified with any of the following:
 
  * `typing.List`
+ * `typing.Tuple`
  * `typing.List[T]`
+ * `typing.Tuple[T]`
  * `list`
- * `list[T]` 
+ * `tuple`
+ * `list[T]`
+ * `tuple[T]`
 
-Where `T` is another supported type other than a list.  Note that `list` is a supported typehint from Python 3.9 onwards.
+Where `T` is another supported type other than a list or tuple.  Note that `list` and `tuple` are supported typehints
+from Python 3.9 onwards.
 
-When an optional argument is a list it should be specified after any positional arguments so as not to confuse the
+When an optional argument is a list/tuple it should be specified after any positional arguments so as not to confuse the
 parser.
 
 ```python
@@ -332,9 +337,22 @@ def sample_api(foo: list, bar: list[int] = None):
 ```
 
 ```
-$ python sample_api.py 1 2 --bar 1 2 
+$ python sample_api.py 1 2 --bar 1 2
 ['1', '2']
 [1, 2]
+```
+
+```python
+@bargeparse.command
+def sample_api(foo: tuple, bar: tuple[int] = None):
+    pprint(foo)
+    pprint(bar)
+```
+
+```
+$ python sample_api.py 1 2 --bar 1 2
+('1', '2')
+(1, 2)
 ```
 
 

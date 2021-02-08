@@ -226,6 +226,32 @@ def test_custom_type_factory(monkeypatch):
             ["1", "2"],
             [1, 2],
         ),
+        pytest.param(
+            tuple,
+            ["a", "b"],
+            ("a", "b"),
+            marks=pytest.mark.skipif(
+                sys.version_info < (3, 9), reason="Builtin type unsupported"
+            ),
+        ),
+        pytest.param(
+            "tuple[int]",
+            ["1", "2"],
+            (1, 2),
+            marks=pytest.mark.skipif(
+                sys.version_info < (3, 9), reason="Builtin type unsupported"
+            ),
+        ),
+        (
+            typing.Tuple,
+            ["a", "b"],
+            ("a", "b"),
+        ),
+        (
+            typing.Tuple[int],
+            ["1", "2"],
+            (1, 2),
+        ),
     ),
 )
 def test_list_types(monkeypatch, list_type, input_value, expected):
@@ -307,6 +333,24 @@ def test_enum_choices_multiple_valid_arguments(monkeypatch):
     func()
 
     assert captured_a == [Choices.FIRST, Choices.SECOND]
+
+
+def test_enum_choices_multiple_valid_arguments_using_tuple(monkeypatch):
+    captured_a = None
+    monkeypatch.setattr("argparse._sys.argv", ["", "first", "second"])
+
+    class Choices(enum.Enum):
+        FIRST = "first"
+        SECOND = "second"
+
+    @command
+    def func(a: typing.Tuple[Choices]):
+        nonlocal captured_a
+        captured_a = a
+
+    func()
+
+    assert captured_a == (Choices.FIRST, Choices.SECOND)
 
 
 def test_enum_choices_invalid_argument(prepare_for_output, monkeypatch, capsys):
