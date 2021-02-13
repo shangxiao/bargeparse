@@ -173,6 +173,7 @@ def get_param_comments(func):
     tokens = tokenize.tokenize(io.BytesIO(source.encode("utf-8")).readline)
     prev_t = None
     prev_name = None
+    prev_name_line = None
     comments = {}
     for t in tokens:
         if t.start[0] >= body_lineno:
@@ -183,8 +184,14 @@ def get_param_comments(func):
             and prev_t.exact_type in TOKENS_PRECEDING_PARAM
         ):
             prev_name = t.string
+            prev_name_line = t.start[0]
         # <3.7 COMMENT is only available in tokenize
-        if t.exact_type == tokenize.COMMENT and prev_name:
+        if (
+            t.exact_type == tokenize.COMMENT
+            and prev_name
+            # only comments on the same line as the param are accepted
+            and prev_name_line == t.start[0]
+        ):
             comments[prev_name] = t.string.lstrip("#").strip()
         prev_t = t
     return comments

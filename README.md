@@ -362,6 +362,7 @@ $ python sample_api.py 1 2 --bar 1 2
 @bargeparse.command
 def sample_api(
     a,  # Help message for 'a'
+    # A regular comment!
     b, c  # Help message for 'c'
 ):
     ...

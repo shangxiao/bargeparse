@@ -549,6 +549,7 @@ def test_parameter_help(prepare_for_output, monkeypatch, capsys):
     def func(
         *,
         a,  # Help message for 'a'
+        # Not a help message
         b: str,  # Help message for 'b'
         c: str = 'Default for c',  # Help message for 'c'
         d, e,  # Help message for 'e'
