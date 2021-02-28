@@ -11,6 +11,12 @@ import token
 import tokenize
 import typing
 
+try:
+    import argcomplete
+except ImportError:
+    argcomplete = None
+
+
 from . import actions
 
 LIST_TYPES = (
@@ -245,6 +251,9 @@ def cli(func, param_factories=None):
             define_params(
                 subcommand_params, subparser, param_factories, subcommand_param_comments
             )
+
+    if argcomplete:
+        argcomplete.autocomplete(parser)
 
     arg_namespace = parser.parse_args()
 
