@@ -43,51 +43,51 @@ def test_command_can_be_called_directly_bypassing_cli_parsing(monkeypatch):
 def test_args_and_kwargs(monkeypatch):
     captured_a = None
     captured_b = None
-    captured_c = None
-    captured_d = None
+    captured_cc = None
+    captured_dd = None
     monkeypatch.setattr(
-        "argparse._sys.argv", ["", "--c", "fizz", "--d", "buzz", "foo", "bar"]
+        "argparse._sys.argv", ["", "--cc", "fizz", "--dd", "buzz", "foo", "bar"]
     )
 
     @command
-    def func(a, b, c=None, d=None):
+    def func(a, b, cc=None, dd=None):
         nonlocal captured_a
         nonlocal captured_b
-        nonlocal captured_c
-        nonlocal captured_d
+        nonlocal captured_cc
+        nonlocal captured_dd
         captured_a = a
         captured_b = b
-        captured_c = c
-        captured_d = d
+        captured_cc = cc
+        captured_dd = dd
 
     func()
 
     assert captured_a == "foo"
     assert captured_b == "bar"
-    assert captured_c == "fizz"
-    assert captured_d == "buzz"
+    assert captured_cc == "fizz"
+    assert captured_dd == "buzz"
 
 
 def test_keyword_only_args(monkeypatch):
-    captured_a = None
-    captured_b = None
-    captured_c = None
-    monkeypatch.setattr("argparse._sys.argv", ["", "--a", "foo", "--b", "bar"])
+    captured_aa = None
+    captured_bb = None
+    captured_cc = None
+    monkeypatch.setattr("argparse._sys.argv", ["", "--aa", "foo", "--bb", "bar"])
 
     @command
-    def func(*, a, b="b", c="c"):
-        nonlocal captured_a
-        nonlocal captured_b
-        nonlocal captured_c
-        captured_a = a
-        captured_b = b
-        captured_c = c
+    def func(*, aa, bb="b", cc="c"):
+        nonlocal captured_aa
+        nonlocal captured_bb
+        nonlocal captured_cc
+        captured_aa = aa
+        captured_bb = bb
+        captured_cc = cc
 
     func()
 
-    assert captured_a == "foo"
-    assert captured_b == "bar"
-    assert captured_c == "c"
+    assert captured_aa == "foo"
+    assert captured_bb == "bar"
+    assert captured_cc == "c"
 
 
 def test_converts_arg_names_to_kebab_case(monkeypatch):
@@ -132,8 +132,8 @@ def test_converts_arg_names_to_kebab_case(monkeypatch):
         (str, "1", "1"),
         (int, "1", 1),
         (float, "0.25", 0.25),
-        (bool, "--a", True),
-        (bool, "--no-a", False),
+        (bool, "--aa", True),
+        (bool, "--no-aa", False),
         (date, "2000-01-01", date(2000, 1, 1)),
         (datetime, "2000-01-01 12:15:30", datetime(2000, 1, 1, 12, 15, 30)),
         (pathlib.Path, ".", pathlib.Path(".")),
@@ -141,24 +141,24 @@ def test_converts_arg_names_to_kebab_case(monkeypatch):
 )
 def test_typehint(monkeypatch, input_type, input, expected):
     monkeypatch.setattr("argparse._sys.argv", ["", input])
-    captured_a = None
+    captured_aa = None
 
     @command
-    def func(a: input_type):
-        nonlocal captured_a
-        captured_a = a
+    def func(aa: input_type):
+        nonlocal captured_aa
+        captured_aa = aa
 
     func()
 
-    assert captured_a == expected
+    assert captured_aa == expected
 
 
 @pytest.mark.parametrize(
     "param_default,input,expected",
     (
-        (False, "--a", True),
+        (False, "--aa", True),
         (False, None, False),
-        (True, "--a", False),
+        (True, "--aa", False),
         (True, None, True),
     ),
 )
@@ -167,16 +167,16 @@ def test_typehint_optional_boolean(monkeypatch, param_default, input, expected):
     if input:
         params += [input]
     monkeypatch.setattr("argparse._sys.argv", params)
-    captured_a = None
+    captured_aa = None
 
     @command
-    def func(a: bool = param_default):
-        nonlocal captured_a
-        captured_a = a
+    def func(aa: bool = param_default):
+        nonlocal captured_aa
+        captured_aa = aa
 
     func()
 
-    assert captured_a == expected
+    assert captured_aa == expected
 
 
 def test_custom_type_factory(monkeypatch):
@@ -256,8 +256,8 @@ def test_custom_type_factory(monkeypatch):
 )
 def test_list_types(monkeypatch, list_type, input_value, expected):
     captured_a = None
-    captured_b = None
-    args = [""] + input_value + ["--b"] + input_value
+    captured_bb = None
+    args = [""] + input_value + ["--bb"] + input_value
     monkeypatch.setattr("argparse._sys.argv", args)
 
     # not sure how else to do this to test on < 3.9
@@ -265,16 +265,16 @@ def test_list_types(monkeypatch, list_type, input_value, expected):
         list_type = eval(list_type)
 
     @command
-    def func(a: list_type, b: list_type = None):
+    def func(a: list_type, bb: list_type = None):
         nonlocal captured_a
-        nonlocal captured_b
+        nonlocal captured_bb
         captured_a = a
-        captured_b = b
+        captured_bb = bb
 
     func()
 
     assert captured_a == expected
-    assert captured_b == expected
+    assert captured_bb == expected
 
 
 def test_register_other_types(monkeypatch):
@@ -548,15 +548,15 @@ def test_parameter_help(prepare_for_output, monkeypatch, capsys):
     @command
     def func(
         *,
-        a,  # Help message for 'a'
-        # Not a help message
-        b: str,  # Help message for 'b'
-        c: str = 'Default for c',  # Help message for 'c'
-        d, e,  # Help message for 'e'
-        f, g  # Help message for 'g'
+        aa,  # Help message for 'aa'
+        # Not aa help message
+        bb: str,  # Help message for 'bb'
+        cc: str = 'Default for cc',  # Help message for 'cc'
+        dd, ee,  # Help message for 'ee'
+        ff, gg  # Help message for 'gg'
     ):
         def inner_func(
-            a,  # This should not be the help message for 'a'
+            aa,  # This should not be the help message for 'aa'
         ):
             ...
     # fmt: on
@@ -567,17 +567,17 @@ def test_parameter_help(prepare_for_output, monkeypatch, capsys):
     assert (
         capsys.readouterr().out
         == """\
-usage: prog [-h] --a A --b B [--c C] --d D --e E --f F --g G
+usage: prog [-h] --aa AA --bb BB [--cc CC] --dd DD --ee EE --ff FF --gg GG
 
 optional arguments:
   -h, --help  show this help message and exit
-  --a A       Help message for 'a' (required)
-  --b B       Help message for 'b' (required)
-  --c C       Help message for 'c' (default: Default for c)
-  --d D       (required)
-  --e E       Help message for 'e' (required)
-  --f F       (required)
-  --g G       Help message for 'g' (required)
+  --aa AA     Help message for 'aa' (required)
+  --bb BB     Help message for 'bb' (required)
+  --cc CC     Help message for 'cc' (default: Default for cc)
+  --dd DD     (required)
+  --ee EE     Help message for 'ee' (required)
+  --ff FF     (required)
+  --gg GG     Help message for 'gg' (required)
 """
     )
 
