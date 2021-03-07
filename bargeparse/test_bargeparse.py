@@ -274,7 +274,7 @@ def test_list_types(monkeypatch, list_type, input_value, expected):
     func()
 
     assert captured_a == expected
-    assert captured_a == expected
+    assert captured_b == expected
 
 
 def test_register_other_types(monkeypatch):
