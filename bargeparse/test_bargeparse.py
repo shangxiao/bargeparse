@@ -45,20 +45,24 @@ def test_args_and_kwargs(monkeypatch):
     captured_b = None
     captured_cc = None
     captured_dd = None
+    captured_e = None
     monkeypatch.setattr(
-        "argparse._sys.argv", ["", "--cc", "fizz", "--dd", "buzz", "foo", "bar"]
+        "argparse._sys.argv",
+        ["", "--cc", "fizz", "--dd", "buzz", "-e", "bang", "foo", "bar"],
     )
 
     @command
-    def func(a, b, cc=None, dd=None):
+    def func(a, b, cc=None, dd=None, e=None):
         nonlocal captured_a
         nonlocal captured_b
         nonlocal captured_cc
         nonlocal captured_dd
+        nonlocal captured_e
         captured_a = a
         captured_b = b
         captured_cc = cc
         captured_dd = dd
+        captured_e = e
 
     func()
 
@@ -66,6 +70,7 @@ def test_args_and_kwargs(monkeypatch):
     assert captured_b == "bar"
     assert captured_cc == "fizz"
     assert captured_dd == "buzz"
+    assert captured_e == "bang"
 
 
 def test_keyword_only_args(monkeypatch):
@@ -151,6 +156,34 @@ def test_typehint(monkeypatch, input_type, input, expected):
     func()
 
     assert captured_aa == expected
+
+
+@pytest.mark.parametrize(
+    "param_default,input,expected",
+    (
+        (False, "-a", True),
+        (False, None, False),
+        (True, "-a", False),
+        (True, None, True),
+    ),
+)
+def test_typehint_optional_boolean_single_char(
+    monkeypatch, param_default, input, expected
+):
+    params = [""]
+    if input:
+        params += [input]
+    monkeypatch.setattr("argparse._sys.argv", params)
+    captured_a = None
+
+    @command
+    def func(a: bool = param_default):
+        nonlocal captured_a
+        captured_a = a
+
+    func()
+
+    assert captured_a == expected
 
 
 @pytest.mark.parametrize(

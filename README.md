@@ -13,7 +13,7 @@ Decorate your functions with `@bargeparse.command`...
 import bargeparse
 
 @bargeparse.command
-def awesome_cli(foo, bar=None):
+def awesome_cli(foo, bar=None, v: bool = False):
     ...
 
 if __name__ == "__main__":
@@ -23,7 +23,7 @@ if __name__ == "__main__":
 to produce a CLI :
 
 ```
-python awesome_cli.py foo --bar bar
+python awesome_cli.py foo --bar bar -v
 ```
 
 
@@ -307,6 +307,31 @@ False
 $ python sample_api.py --no-foo --bar
 False
 True
+```
+
+
+### Single Character "Short" Options
+
+Short options may be specified by using single character parameter names:
+
+```python
+@bargeparse.command
+def ls(l: bool = False, t: bool = False, r: bool = False):
+    if l:
+        print("Displaying long format")
+    if t:
+        print("Sorting by modified time")
+    if r:
+        print("Reversing the order")
+```
+
+which can be invoked like so:
+
+```
+$ python ls.py -ltr
+Displaying long format
+Sorting by modified time
+Reversing the order
 ```
 
 

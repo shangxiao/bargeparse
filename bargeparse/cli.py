@@ -92,7 +92,11 @@ def define_params(params, parser, param_factories, param_comments):
 
         if param.annotation == bool:
             # booleans are always optional for both types of parameters
-            arg_name = f"--{param_display_name}"
+            arg_name = (
+                f"--{param_display_name}"
+                if len(param_display_name) > 1
+                else f"-{param_display_name}"
+            )
             arg_options = dict(
                 dest=param.name,
                 action=(
@@ -152,7 +156,11 @@ def define_params(params, parser, param_factories, param_comments):
                     help=help_msg,
                 )
             else:
-                arg_name = f"--{param_display_name}"
+                arg_name = (
+                    f"--{param_display_name}"
+                    if len(param_display_name) > 1
+                    else f"-{param_display_name}"
+                )
                 arg_options = dict(
                     dest=param.name,
                     default=argparse.SUPPRESS,
