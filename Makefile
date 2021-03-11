@@ -5,7 +5,7 @@ build: clean
 	python -m pep517.build .
 	git stash pop
 
-deploy:
+deploy: build
 	twine upload dist/*
 
 clean:
