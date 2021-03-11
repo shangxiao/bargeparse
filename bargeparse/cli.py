@@ -256,14 +256,18 @@ def cli(func, param_factories=None):
 
     arg_namespace = parser.parse_args()
 
-    if func._subcommands:
-        all_params = list(
-            itertools.chain(
-                inspect.signature(arg_namespace.target_func).parameters.values(), params
-            )
-        )
-    else:
-        all_params = params
+    target_func_params = inspect.signature(
+        arg_namespace.target_func
+    ).parameters.values()
+    target_func_has_var_positional = inspect.Parameter.VAR_POSITIONAL in (
+        p.kind for p in target_func_params
+    )
+    target_func_has_var_keyword = inspect.Parameter.VAR_KEYWORD in (
+        p.kind for p in target_func_params
+    )
+    all_params = (
+        list(target_func_params) + list(params) if func._subcommands else params
+    )
 
     args = []
     kwargs = {}
@@ -275,9 +279,19 @@ def cli(func, param_factories=None):
             # as well as any variable args
             continue
         if is_positional(param):
-            args.append(getattr(arg_namespace, param.name))
+            # only take global args for subcommands if the target func has *args
+            if (
+                param.name in (p.name for p in target_func_params)
+                or target_func_has_var_positional
+            ):
+                args.append(getattr(arg_namespace, param.name))
         else:
-            kwargs[param.name] = getattr(arg_namespace, param.name)
+            # only take global options for subcommands if the target func has **kwargs
+            if (
+                param.name in (p.name for p in target_func_params)
+                or target_func_has_var_keyword
+            ):
+                kwargs[param.name] = getattr(arg_namespace, param.name)
 
     # add remaining arguments added from custom parser arguments
     remaining_arguments = {

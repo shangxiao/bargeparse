@@ -468,6 +468,27 @@ def test_subcommand(monkeypatch):
     assert captured_foo == "bar"
 
 
+def test_subcommand_without_var_args_or_var_kwargs(monkeypatch):
+    captured_foo = None
+    monkeypatch.setattr(
+        "argparse._sys.argv",
+        ["", "global-argument", "--global-option", "subfunc", "bar"],
+    )
+
+    @command
+    def func(global_argument, global_option: bool = False):
+        ...
+
+    @func.subcommand
+    def subfunc(foo):
+        nonlocal captured_foo
+        captured_foo = foo
+
+    func()
+
+    assert captured_foo == "bar"
+
+
 def test_main_command_with_subcommand(monkeypatch):
     captured_global_option = None
     monkeypatch.setattr("argparse._sys.argv", ["", "--global-option"])
