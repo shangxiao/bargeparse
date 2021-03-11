@@ -259,7 +259,7 @@ def cli(func, param_factories=None):
     if func._subcommands:
         all_params = list(
             itertools.chain(
-                params, inspect.signature(arg_namespace.target_func).parameters.values()
+                inspect.signature(arg_namespace.target_func).parameters.values(), params
             )
         )
     else:

@@ -440,23 +440,30 @@ optional arguments:
 
 
 def test_subcommand(monkeypatch):
+    captured_global_arg = None
     captured_global_option = None
     captured_foo = None
-    monkeypatch.setattr("argparse._sys.argv", ["", "--global-option", "subfunc", "bar"])
+    monkeypatch.setattr(
+        "argparse._sys.argv",
+        ["", "global-argument", "--global-option", "subfunc", "bar"],
+    )
 
     @command
-    def func(global_option: bool = False):
+    def func(global_argument, global_option: bool = False):
         ...
 
     @func.subcommand
-    def subfunc(foo, **kwargs):
+    def subfunc(foo, *args, **kwargs):
+        nonlocal captured_global_arg
         nonlocal captured_global_option
         nonlocal captured_foo
+        captured_global_arg = args[0]
         captured_global_option = kwargs["global_option"]
         captured_foo = foo
 
     func()
 
+    assert captured_global_arg == "global-argument"
     assert captured_global_option is True
     assert captured_foo == "bar"
 
