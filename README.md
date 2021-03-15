@@ -42,8 +42,16 @@ Bargeparse introspects your function signature using argparse to create a CLI wi
 
 ## Installation
 
+### pip
+
 ```
 pip install bargeparse
+```
+
+### conda
+
+```
+conda install -c conda-forge bargeparse
 ```
 
 
