@@ -22,6 +22,7 @@ def command(*args, param_factories=None):
                 return func(*args, **kwargs)
             cli(func, param_factories=param_factories)
 
+        wrapper.is_bargeparse_command = True
         return wrapper
 
     if len(args) > 0 and callable(args[0]):

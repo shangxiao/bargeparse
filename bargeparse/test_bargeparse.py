@@ -489,6 +489,29 @@ def test_subcommand_without_var_args_or_var_kwargs(monkeypatch):
     assert captured_foo == "bar"
 
 
+def test_subcommand_also_as_command_with_no_args(monkeypatch):
+    """
+    An edge case where a subcommand was also a command but with no args
+    """
+    subfunc_run = False
+    monkeypatch.setattr("argparse._sys.argv", ["", "subfunc"])
+
+    @command
+    def func():
+        ...
+
+    @command
+    def subfunc():
+        nonlocal subfunc_run
+        subfunc_run = True
+
+    func.subcommand(subfunc)
+
+    func()
+
+    assert subfunc_run
+
+
 def test_main_command_with_subcommand(monkeypatch):
     captured_global_option = None
     monkeypatch.setattr("argparse._sys.argv", ["", "--global-option"])
