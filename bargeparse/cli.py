@@ -256,9 +256,8 @@ def cli(func, param_factories=None):
 
     arg_namespace = parser.parse_args()
 
-    target_func_params = inspect.signature(
-        arg_namespace.target_func
-    ).parameters.values()
+    target_func = arg_namespace.target_func
+    target_func_params = inspect.signature(target_func).parameters.values()
     target_func_has_var_positional = inspect.Parameter.VAR_POSITIONAL in (
         p.kind for p in target_func_params
     )
@@ -303,11 +302,8 @@ def cli(func, param_factories=None):
 
     # pass the parser if variable keyword parameter present
     if inspect.Parameter.VAR_KEYWORD in (
-        p.kind
-        for p in inspect.signature(
-            getattr(arg_namespace, "target_func")
-        ).parameters.values()
+        p.kind for p in inspect.signature(target_func).parameters.values()
     ):
         kwargs["parser"] = parser
 
-    getattr(arg_namespace, "target_func")(*args, **kwargs)
+    target_func(*args, **kwargs)
