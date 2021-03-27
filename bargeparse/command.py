@@ -15,10 +15,10 @@ def command(*args, param_factories=None):
         )
 
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args, no_bargeparse: bool = False, **kwargs):
             # If there are args or kwargs, then assume that func() is being called
             # directly and is not from the command line.
-            if len(args) > 0 or len(kwargs) > 0:
+            if len(args) > 0 or len(kwargs) > 0 or no_bargeparse:
                 return func(*args, **kwargs)
             cli(func, param_factories=param_factories)
 

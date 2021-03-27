@@ -40,6 +40,24 @@ def test_command_can_be_called_directly_bypassing_cli_parsing(monkeypatch):
     assert captured_a == "foo"
 
 
+def test_commad_can_be_called_directly_bypassing_cli_parsing_with_no_args(monkeypatch):
+    """
+    Make sure that even functions with no parameters can be called directly; this
+    may be useful for testing, etc.
+    """
+    did_func_run = False
+    monkeypatch.setattr("argparse._sys.argv", ["", "extraneous value"])
+
+    @command
+    def func():
+        nonlocal did_func_run
+        did_func_run = True
+
+    func(no_bargeparse=True)
+
+    assert did_func_run
+
+
 def test_args_and_kwargs(monkeypatch):
     captured_a = None
     captured_b = None

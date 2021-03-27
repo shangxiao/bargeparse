@@ -307,7 +307,7 @@ def cli(func, param_factories=None):
         kwargs["parser"] = parser
 
     # prevent any possible duplicate argparse parsing
-    while getattr(target_func, "is_bargeparse_command", False):
-        target_func = target_func.__wrapped__
+    if getattr(target_func, "is_bargeparse_command", False):
+        kwargs["no_bargeparse"] = True
 
     target_func(*args, **kwargs)
