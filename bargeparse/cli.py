@@ -211,11 +211,11 @@ def cli(func, param_factories=None):
         description=description,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    params = inspect.signature(func).parameters.values()
+    params = inspect.signature(func, globalns=globals()).parameters.values()
 
     if "parser" in (p.name for p in params):
         inner_func = func(parser)
-        params = inspect.signature(inner_func).parameters.values()
+        params = inspect.signature(inner_func, globalns=globals()).parameters.values()
         param_comments = get_param_comments(inner_func)
         parser.set_defaults(target_func=inner_func)
     else:
@@ -248,7 +248,7 @@ def cli(func, param_factories=None):
                 help=subcommand_summary,
             )
             subparser.set_defaults(target_func=subcommand)
-            subcommand_params = inspect.signature(subcommand).parameters.values()
+            subcommand_params = inspect.signature(subcommand, globalns=globals()).parameters.values()
             subcommand_param_comments = get_param_comments(subcommand)
             define_params(
                 subcommand_params, subparser, param_factories, subcommand_param_comments
