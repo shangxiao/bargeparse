@@ -149,31 +149,116 @@ def test_converts_arg_names_to_kebab_case(monkeypatch):
     assert captured_arg_surrounded_by_underscores == "buzz"
 
 
-@pytest.mark.parametrize(
-    "input_type,input,expected",
-    (
-        (str, "1", "1"),
-        (int, "1", 1),
-        (float, "0.25", 0.25),
-        (bool, "--aa", True),
-        (bool, "--no-aa", False),
-        (date, "2000-01-01", date(2000, 1, 1)),
-        (datetime, "2000-01-01 12:15:30", datetime(2000, 1, 1, 12, 15, 30)),
-        (pathlib.Path, ".", pathlib.Path(".")),
-    ),
-)
-def test_typehint(monkeypatch, input_type, input, expected):
-    monkeypatch.setattr("argparse._sys.argv", ["", input])
+def test_typehint_str(monkeypatch):
+    monkeypatch.setattr("argparse._sys.argv", ["", "1"])
     captured_aa = None
 
     @command
-    def func(aa: input_type):
+    def func(aa: str):
         nonlocal captured_aa
         captured_aa = aa
 
     func()
 
-    assert captured_aa == expected
+    assert captured_aa == "1"
+
+
+def test_typehint_int(monkeypatch):
+    monkeypatch.setattr("argparse._sys.argv", ["", "1"])
+    captured_aa = None
+
+    @command
+    def func(aa: int):
+        nonlocal captured_aa
+        captured_aa = aa
+
+    func()
+
+    assert captured_aa == 1
+
+
+def test_typehint_float(monkeypatch):
+    monkeypatch.setattr("argparse._sys.argv", ["", "0.25"])
+    captured_aa = None
+
+    @command
+    def func(aa: float):
+        nonlocal captured_aa
+        captured_aa = aa
+
+    func()
+
+    assert captured_aa == 0.25
+
+
+def test_typehint_bool(monkeypatch):
+    monkeypatch.setattr("argparse._sys.argv", ["", "--aa"])
+    captured_aa = None
+
+    @command
+    def func(aa: bool):
+        nonlocal captured_aa
+        captured_aa = aa
+
+    func()
+
+    assert captured_aa is True
+
+
+def test_typehint_bool_not(monkeypatch):
+    monkeypatch.setattr("argparse._sys.argv", ["", "--no-aa"])
+    captured_aa = None
+
+    @command
+    def func(aa: bool):
+        nonlocal captured_aa
+        captured_aa = aa
+
+    func()
+
+    assert captured_aa is False
+
+
+def test_typehint_date(monkeypatch):
+    monkeypatch.setattr("argparse._sys.argv", ["", "2000-01-01"])
+    captured_aa = None
+
+    @command
+    def func(aa: date):
+        nonlocal captured_aa
+        captured_aa = aa
+
+    func()
+
+    assert captured_aa == date(2000, 1, 1)
+
+
+def test_typehint_datetime(monkeypatch):
+    monkeypatch.setattr("argparse._sys.argv", ["", "2000-01-01 12:15:30"])
+    captured_aa = None
+
+    @command
+    def func(aa: datetime):
+        nonlocal captured_aa
+        captured_aa = aa
+
+    func()
+
+    assert captured_aa == datetime(2000, 1, 1, 12, 15, 30)
+
+
+def test_typehint_path(monkeypatch):
+    monkeypatch.setattr("argparse._sys.argv", ["", "."])
+    captured_aa = None
+
+    @command
+    def func(aa: pathlib.Path):
+        nonlocal captured_aa
+        captured_aa = aa
+
+    func()
+
+    assert captured_aa == pathlib.Path(".")
 
 
 @pytest.mark.parametrize(
