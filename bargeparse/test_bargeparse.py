@@ -315,16 +315,17 @@ def test_typehint_optional_boolean(monkeypatch, param_default, input, expected):
     assert captured_aa == expected
 
 
+@dataclass
+class CustomType:
+    a: str
+
+
 def test_custom_type_factory(monkeypatch):
     captured_a = None
     monkeypatch.setattr("argparse._sys.argv", ["", "foo"])
 
-    @dataclass
-    class CustomType:
-        a: str
-
     @command
-    def func(a: CustomType):
+    def func(a: bargeparse.test_bargeparse.CustomType):
         nonlocal captured_a
         captured_a = a
 
